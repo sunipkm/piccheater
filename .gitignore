@@ -1,0 +1,4 @@
+**/*-backups/*.zip
+**/*-info-cache
+**/target
+.DS_Store
