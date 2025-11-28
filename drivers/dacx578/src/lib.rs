@@ -1,7 +1,17 @@
 #![no_std]
 #![deny(missing_docs)]
+
 //! Driver for the DACx578 series Digital to Analog Converters (DACs) over I2C.
 //! DAC5578 (8-bit), DAC6578 (10-bit), and DAC7578 (12-bit) devices are supported.
+
+use bitfield_struct::bitfield;
+
+mod async_impl;
+mod blocking_impl;
+mod details;
+
+pub use async_impl::AsyncFunctions;
+pub use blocking_impl::SyncFunctions;
 
 /// user_address can be set by pulling the ADDR0 pin high/low or leave it floating
 #[derive(Debug, Clone, Copy)]
@@ -68,22 +78,6 @@ pub struct Channels {
     pub H: bool,
 }
 
-impl From<u8> for Channel {
-    fn from(index: u8) -> Self {
-        match index {
-            0 => Channel::A,
-            1 => Channel::B,
-            2 => Channel::C,
-            3 => Channel::D,
-            4 => Channel::E,
-            5 => Channel::F,
-            6 => Channel::G,
-            7 => Channel::H,
-            _ => panic!("Unkown channel number {}", index),
-        }
-    }
-}
-
 /// The type of the command to send for a Command
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
@@ -100,7 +94,7 @@ pub enum CommandType {
 
 /// Read from the specified register
 #[derive(Debug, Clone, Copy)]
-pub enum ReadRegister {
+pub enum Register {
     /// Read the value from the specified channel input register
     ChannelInput(Channel),
     /// Read the value from the specified channel DAC register
@@ -115,7 +109,7 @@ pub enum ReadRegister {
 
 /// Readout from the specified register
 #[derive(Debug, Clone, Copy)]
-pub enum Readout {
+pub enum Configuration {
     /// Value read from the specified channel input register
     ChannelInput {
         /// The channel from which the value was read
@@ -131,11 +125,45 @@ pub enum Readout {
         value: u16,
     },
     /// Value read from the power-down register
-    PowerDown(u8),
+    PowerDown {
+        /// The power-down mode
+        mode: PowerDownMode,
+        /// Selected channels
+        channels: Channels,
+    },
     /// Value read from the clear code register
-    ClearCode(u8),
+    ClearCode(ClearCode),
     /// Value read from the LDAC register
     Ldac(Channels),
+}
+
+#[derive(Debug, Clone, Copy)]
+#[repr(u8)]
+/// Power-down modes for the DACx578 devices
+pub enum PowerDownMode {
+    /// Normal operation
+    Normal = 0b00,
+    /// 1 kΩ to GND
+    KOhm1ToGnd = 0b01,
+    /// 100 kΩ to GND
+    KOhm100ToGnd = 0b10,
+    /// High-Z state
+    HighZ = 0b11,
+}
+
+#[derive(Debug, Clone, Copy)]
+#[repr(u8)]
+/// Clear code options for the DACx578 devices
+/// The Clear pin behavior is configured via the Clear Code register.
+pub enum ClearCode {
+    /// Outputs are set to 0V when Clear pin is activated.
+    ZeroScale = 0b00,
+    /// Outputs are set to mid-scale when Clear pin is activated.
+    MidScale = 0b01,
+    /// Outputs are set to full-scale when Clear pin is activated.
+    FullScale = 0b10,
+    /// Clear pin functionality is disabled.
+    Disabled = 0b11,
 }
 
 /// Two bit flags indicating the reset mode for the DAC5578
@@ -155,102 +183,17 @@ pub enum ResetMode {
 /// DAC5578 is a 8-bit DAC ([`Dac8Bits`]).
 /// DAC6578 is a 10-bit DAC ([`Dac10Bits`]).
 /// DAC7578 is a 12-bit DAC ([`Dac12Bits`]).
-pub struct DacX578<BITS, I2C>
-where
-    BITS: DacBits,
-{
+pub struct DacX578<I2C> {
     i2c: I2C,
     address: u8,
-    _bits: core::marker::PhantomData<BITS>,
 }
 
-/// Trait to define the bit resolution of the DAC device.
-pub trait DacBits {
-    /// The number of bits to shift the input value to map to the DAC resolution.
-    const SHIFT: u8;
-
-    /// Maps the input value to the DAC resolution by shifting left.
-    fn map(inp: u16) -> u16 {
-        inp << Self::SHIFT
-    }
-}
-
-/// 8-bit DAC5578
-pub struct Dac8Bits;
-
-impl DacBits for Dac8Bits {
-    const SHIFT: u8 = 8;
-}
-
-/// 10-bit DAC6578
-pub struct Dac10Bits;
-
-impl DacBits for Dac10Bits {
-    const SHIFT: u8 = 6;
-}
-
-/// 12-bit DAC7578
-pub struct Dac12Bits;
-
-impl DacBits for Dac12Bits {
-    const SHIFT: u8 = 4;
-}
-
-impl<BITS: DacBits, I2C> DacX578<BITS, I2C> {
+impl<I2C> DacX578<I2C> {
     /// Creates a new instance of the DACx578 driver.
     pub fn new(i2c: I2C, address: Address) -> Self {
         DacX578 {
             i2c,
             address: address as u8,
-            _bits: core::marker::PhantomData,
-        }
-    }
-
-    /// Get the command bytes
-    pub(crate) fn get_command_bytes(command: CommandType, channel: Channel, value: u16) -> [u8; 3] {
-        let command_byte = (command as u8) | (channel as u8);
-        let value = BITS::map(value);
-        let high_byte = (value >> 8) as u8;
-        let low_byte = (value & 0xff) as u8;
-        [command_byte, high_byte, low_byte]
-    }
-}
-
-mod async_impl;
-mod blocking_impl;
-
-pub use async_impl::AsyncFunctions;
-use bitfield_struct::bitfield;
-pub use blocking_impl::SyncFunctions;
-
-#[allow(clippy::from_over_into)]
-impl Into<u8> for ReadRegister {
-    fn into(self) -> u8 {
-        match self {
-            ReadRegister::ChannelInput(channel) => channel as u8,
-            ReadRegister::ChannelDac(channel) => (channel as u8) | 0x10,
-            ReadRegister::PowerDown => 0x40,
-            ReadRegister::ClearCode => 0x50,
-            ReadRegister::Ldac => 0x60,
-        }
-    }
-}
-
-impl From<(ReadRegister, u16, u8)> for Readout {
-    fn from(value: (ReadRegister, u16, u8)) -> Self {
-        let (reg, value, shift) = value;
-        match reg {
-            ReadRegister::ChannelInput(channel) => Readout::ChannelInput {
-                channel,
-                value: value >> shift,
-            },
-            ReadRegister::ChannelDac(channel) => Readout::ChannelDac {
-                channel,
-                value: value >> shift,
-            },
-            ReadRegister::PowerDown => Readout::PowerDown(value as u8),
-            ReadRegister::ClearCode => Readout::ClearCode(value as u8),
-            ReadRegister::Ldac => Readout::Ldac(Channels::from_bits(value as u8)),
         }
     }
 }
