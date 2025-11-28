@@ -12,13 +12,13 @@ where
     async fn read(&mut self, register: Register) -> Result<Configuration, E>;
     /// Write a configuration to a specific register.
     async fn configure(&mut self, config: Configuration) -> Result<(), E>;
-    /// Write a value to a specific channel. 
+    /// Write a value to a specific channel.
     /// The upper N bits are used depending on the DAC resolution.
     async fn write(&mut self, channel: Channel, value: u16) -> Result<(), E>;
-    /// Update a specific channel with a new value. 
+    /// Update a specific channel with a new value.
     /// The upper N bits are used depending on the DAC resolution.
     async fn update(&mut self, channel: Channel) -> Result<(), E>;
-    /// Write and update a specific channel with a new value. 
+    /// Write and update a specific channel with a new value.
     /// The upper N bits are used depending on the DAC resolution.
     async fn write_and_update(&mut self, channel: Channel, value: u16) -> Result<(), E>;
     /// Write new value to a channel and update all channels (global LDAC).
@@ -50,12 +50,9 @@ where
         Ok(Configuration::from((register, value)))
     }
 
-        
     async fn configure(&mut self, config: Configuration) -> Result<(), E> {
         let bytes: [u8; 3] = config.into();
-        self.i2c
-            .write(self.address, &bytes)
-            .await
+        self.i2c.write(self.address, &bytes).await
     }
 
     async fn write(&mut self, channel: Channel, value: u16) -> Result<(), E> {
