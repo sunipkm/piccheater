@@ -6,11 +6,16 @@
 
 use bitfield_struct::bitfield;
 
+
+#[cfg(feature = "async")]
 mod async_impl;
+#[cfg(feature = "sync")]
 mod blocking_impl;
 mod details;
 
+#[cfg(feature = "async")]
 pub use async_impl::AsyncFunctions;
+#[cfg(feature = "sync")]
 pub use blocking_impl::SyncFunctions;
 
 /// user_address can be set by pulling the ADDR0 pin high/low or leave it floating
@@ -178,11 +183,11 @@ pub enum ResetMode {
     MaintainHighSpeed = 0b10,
 }
 
-/// The DACx5578 device instance.
+/// The DACx578 device instance.
 ///
-/// DAC5578 is a 8-bit DAC ([`Dac8Bits`]).
-/// DAC6578 is a 10-bit DAC ([`Dac10Bits`]).
-/// DAC7578 is a 12-bit DAC ([`Dac12Bits`]).
+/// DAC5578 is a 8-bit DAC.
+/// DAC6578 is a 10-bit DAC.
+/// DAC7578 is a 12-bit DAC.
 pub struct DacX578<I2C> {
     i2c: I2C,
     address: u8,

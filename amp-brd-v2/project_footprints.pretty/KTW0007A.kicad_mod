@@ -435,6 +435,38 @@
 		(layers "F.Cu" "F.Mask")
 		(uuid "6c237825-c34c-4047-9c45-77e3017475b5")
 	)
+	(zone
+		(net 0)
+		(net_name "")
+		(layer "B.Cu")
+		(uuid "d830937f-ea6f-4b0d-9360-fe6b1e5a98d0")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0)
+		)
+		(min_thickness 0.25)
+		(filled_areas_thickness no)
+		(keepout
+			(tracks allowed)
+			(vias allowed)
+			(pads allowed)
+			(copperpour allowed)
+			(footprints not_allowed)
+		)
+		(placement
+			(enabled no)
+			(sheetname "")
+		)
+		(fill
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+		)
+		(polygon
+			(pts
+				(xy 8.43 -5.4) (xy 8.43 5.42) (xy -8.31 5.42) (xy -8.31 -5.4)
+			)
+		)
+	)
 	(embedded_fonts no)
 	(model "${KIPRJMOD}/3dmodels/KTW0007A.stp"
 		(offset

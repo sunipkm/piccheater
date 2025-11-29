@@ -4,6 +4,14 @@
 	(generator_version "9.0")
 	(uuid "32c58a90-93ea-45a7-a175-5d4a1c20967f")
 	(paper "A4")
+	(title_block
+		(title "${PRJ_TITLE}")
+		(date "2025-11-29")
+		(rev "${BOARD_REV}")
+		(company "LoCSST / UMass Lowell")
+		(comment 1 "Designer: ${DESIGNER}")
+		(comment 2 "Reviwer: ${REVIEWER}")
+	)
 	(lib_symbols
 		(symbol "Device:C"
 			(pin_numbers
@@ -1169,6 +1177,26 @@
 			(embedded_fonts no)
 		)
 	)
+	(text "Use A1 ONLY IF not present at input"
+		(exclude_from_sim no)
+		(at 209.296 75.184 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "34f536c5-8d7c-4a3d-a313-c70849ea4a3c")
+	)
+	(text "Addressing:\nBase: 0b0100_[A1][A0]\nA -> GND: 0b00\nA -> VCC: 0b01\nA -> SDA: 0b10\nA -> SCL: 0b11"
+		(exclude_from_sim no)
+		(at 216.408 137.16 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "9fb0f359-556c-4763-ab09-51a25c7a14ea")
+	)
 	(text "R_{LIM} = (15k*4.75A)/I_{LIM} - 13.75k"
 		(exclude_from_sim no)
 		(at 118.618 141.986 0)
@@ -1220,12 +1248,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "5cd20795-bd72-42c1-af50-4ff6a129c9f8")
-	)
-	(junction
-		(at 120.65 123.19)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "730cdb28-2a3b-4bff-be9b-1ccd70795ce8")
 	)
 	(junction
 		(at 199.39 99.06)
@@ -1395,7 +1417,7 @@
 	)
 	(wire
 		(pts
-			(xy 120.65 123.19) (xy 151.13 123.19)
+			(xy 116.84 124.46) (xy 151.13 124.46)
 		)
 		(stroke
 			(width 0)
@@ -1535,16 +1557,6 @@
 	)
 	(wire
 		(pts
-			(xy 116.84 123.19) (xy 120.65 123.19)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4c642040-6991-4509-8e84-a7e7fca8ca32")
-	)
-	(wire
-		(pts
 			(xy 99.06 115.57) (xy 105.41 115.57)
 		)
 		(stroke
@@ -1665,6 +1677,16 @@
 	)
 	(wire
 		(pts
+			(xy 116.84 124.46) (xy 116.84 123.19)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7534e82b-a79e-4cfa-a814-bbca1a6cb7a8")
+	)
+	(wire
+		(pts
 			(xy 67.31 121.92) (xy 67.31 127)
 		)
 		(stroke
@@ -1675,7 +1697,7 @@
 	)
 	(wire
 		(pts
-			(xy 226.06 99.06) (xy 238.76 99.06)
+			(xy 226.06 99.06) (xy 250.19 99.06)
 		)
 		(stroke
 			(width 0)
@@ -2074,12 +2096,12 @@
 		(uuid "6227a379-c69c-4b33-bf55-b30ea042c69a")
 	)
 	(label "SCL"
-		(at 232.41 67.31 180)
+		(at 209.55 67.31 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "62db0088-3d67-4bb6-946c-64b54b4fab53")
 	)
@@ -2114,12 +2136,12 @@
 		(uuid "709f93f5-2fad-430f-ae9d-c566e9765e93")
 	)
 	(label "SDA"
-		(at 209.55 67.31 0)
+		(at 232.41 67.31 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left bottom)
+			(justify right bottom)
 		)
 		(uuid "7634a35b-ae7e-48b2-aa81-60d488e13e03")
 	)
@@ -2154,22 +2176,22 @@
 		(uuid "a039c1d4-2b44-4cf7-883e-a0681f88d4b4")
 	)
 	(label "SDA"
-		(at 209.55 41.91 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "d2f6ffe5-f241-4b03-9362-cd5d0d4fae1e")
-	)
-	(label "SCL"
 		(at 232.41 41.91 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify right bottom)
+		)
+		(uuid "d2f6ffe5-f241-4b03-9362-cd5d0d4fae1e")
+	)
+	(label "SCL"
+		(at 209.55 41.91 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
 		)
 		(uuid "f0c30761-8fdb-4480-862c-c8a137d4410d")
 	)
@@ -2183,6 +2205,17 @@
 			(justify right)
 		)
 		(uuid "06d5903e-9793-4aa6-adb1-876c53be4049")
+	)
+	(hierarchical_label "A1"
+		(shape input)
+		(at 250.19 99.06 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "504984f9-4197-479e-b679-857aed7149d1")
 	)
 	(hierarchical_label "SDA"
 		(shape bidirectional)
@@ -2230,7 +2263,7 @@
 	)
 	(hierarchical_label "~{DIS}{slash}THERM"
 		(shape bidirectional)
-		(at 151.13 123.19 0)
+		(at 151.13 124.46 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2613,6 +2646,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" ""
@@ -2664,7 +2698,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "299367e6-8880-4277-9708-f3548db94468")
-		(property "Reference" "JP3"
+		(property "Reference" "A10"
 			(at 199.39 60.96 0)
 			(effects
 				(font
@@ -2719,7 +2753,7 @@
 		(instances
 			(project "amplifier-brd"
 				(path "/4a199ccc-be1f-4132-9551-a46e36599bcb/f2b7aa34-9911-40d3-beee-632deab3d3cc"
-					(reference "JP3")
+					(reference "A10")
 					(unit 1)
 				)
 			)
@@ -2735,7 +2769,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "5262abfa-ba75-4f55-aa42-3a9a4fbb069a")
-		(property "Reference" "JP2"
+		(property "Reference" "A01"
 			(at 220.98 35.56 0)
 			(effects
 				(font
@@ -2790,7 +2824,7 @@
 		(instances
 			(project "amplifier-brd"
 				(path "/4a199ccc-be1f-4132-9551-a46e36599bcb/f2b7aa34-9911-40d3-beee-632deab3d3cc"
-					(reference "JP2")
+					(reference "A01")
 					(unit 1)
 				)
 			)
@@ -3213,7 +3247,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "7cc0238b-df84-4777-bf87-6756c0e652ec")
-		(property "Reference" "JP1"
+		(property "Reference" "A00"
 			(at 199.39 35.56 0)
 			(effects
 				(font
@@ -3268,7 +3302,7 @@
 		(instances
 			(project ""
 				(path "/4a199ccc-be1f-4132-9551-a46e36599bcb/f2b7aa34-9911-40d3-beee-632deab3d3cc"
-					(reference "JP1")
+					(reference "A00")
 					(unit 1)
 				)
 			)
@@ -3284,7 +3318,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "9c9aabd7-7094-434b-bb7b-018093827ff0")
-		(property "Reference" "JP4"
+		(property "Reference" "A11"
 			(at 220.98 60.96 0)
 			(effects
 				(font
@@ -3339,7 +3373,7 @@
 		(instances
 			(project "amplifier-brd"
 				(path "/4a199ccc-be1f-4132-9551-a46e36599bcb/f2b7aa34-9911-40d3-beee-632deab3d3cc"
-					(reference "JP4")
+					(reference "A11")
 					(unit 1)
 				)
 			)
@@ -4027,6 +4061,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" ""
