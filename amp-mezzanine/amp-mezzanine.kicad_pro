@@ -58,168 +58,7 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [
-        [
-          "holes_co_located|225099495|91560000|46840b4f-111c-4828-a1bc-655c274b8bf1|726b57ed-4834-465e-88ec-98be1ee5886d",
-          ""
-        ],
-        [
-          "holes_co_located|236699495|91560000|44493f49-5864-4e0c-bba7-163719b250ce|7a0ab845-09ff-49ef-a25a-53b14269eafa",
-          ""
-        ],
-        [
-          "silk_over_copper|223897496|90698094|0f85b0cf-03cf-4828-8fd3-470d3eb3dae5|00000000-0000-0000-0000-000000000000",
-          ""
-        ],
-        [
-          "solder_mask_bridge|226799495|92660000|26aa742d-a8b9-4546-9254-679b96a8fde1|a570e71f-8de4-4d6d-b5d9-a2d71ac219eb",
-          ""
-        ],
-        [
-          "solder_mask_bridge|226999495|92660000|c9182795-136b-4d11-bf20-d19057134570|811d6ae9-ec48-42b4-8bab-62afd03dbd27",
-          ""
-        ],
-        [
-          "solder_mask_bridge|227799495|89060000|377c6545-18b3-4d10-b2a6-c6a7f3c8188e|8b4bd124-895a-42bd-92f2-5bf4d5315de1",
-          ""
-        ],
-        [
-          "solder_mask_bridge|227999495|89060000|6fa7732b-adf9-423e-8330-079530fe9c2e|eaff0b57-9243-47ee-a20e-6ed5b55ac915",
-          ""
-        ],
-        [
-          "solder_mask_bridge|228299495|89060000|8b4bd124-895a-42bd-92f2-5bf4d5315de1|92618bf6-7fa4-4481-9006-356598319601",
-          ""
-        ],
-        [
-          "solder_mask_bridge|228499495|89060000|fdaa5473-9b66-4371-baed-48b7fdec9902|6fa7732b-adf9-423e-8330-079530fe9c2e",
-          ""
-        ],
-        [
-          "solder_mask_bridge|228799495|89060000|92618bf6-7fa4-4481-9006-356598319601|d74104bb-4bdf-4a9b-8044-b58828d5c798",
-          ""
-        ],
-        [
-          "solder_mask_bridge|228999495|89060000|c6697580-85f6-4a52-b577-42844ba76464|fdaa5473-9b66-4371-baed-48b7fdec9902",
-          ""
-        ],
-        [
-          "solder_mask_bridge|229299495|89060000|d74104bb-4bdf-4a9b-8044-b58828d5c798|43674077-bd5b-442e-8dd8-6e2bf8cbca9d",
-          ""
-        ],
-        [
-          "solder_mask_bridge|229499495|89060000|9c071132-d4f7-449e-ac91-6cc6c2d785ea|c6697580-85f6-4a52-b577-42844ba76464",
-          ""
-        ],
-        [
-          "solder_mask_bridge|229799495|89060000|43674077-bd5b-442e-8dd8-6e2bf8cbca9d|372e2c54-010c-4762-8b4e-b6cfa1c035f2",
-          ""
-        ],
-        [
-          "solder_mask_bridge|229999495|89060000|4d5cbde8-7eab-42ed-bee1-b8570f0f5b93|9c071132-d4f7-449e-ac91-6cc6c2d785ea",
-          ""
-        ],
-        [
-          "solder_mask_bridge|230299495|89060000|372e2c54-010c-4762-8b4e-b6cfa1c035f2|829cce16-ba50-4f84-b4a4-f939fc9e7900",
-          ""
-        ],
-        [
-          "solder_mask_bridge|230499495|89060000|ad789ff5-fe2c-4df7-8e37-b7d8561535d5|4d5cbde8-7eab-42ed-bee1-b8570f0f5b93",
-          ""
-        ],
-        [
-          "solder_mask_bridge|230799495|89060000|829cce16-ba50-4f84-b4a4-f939fc9e7900|e0035884-ee8a-4994-a145-3bb6747da902",
-          ""
-        ],
-        [
-          "solder_mask_bridge|230999495|89060000|3fc856b9-eeed-481f-a500-42294ad962cb|ad789ff5-fe2c-4df7-8e37-b7d8561535d5",
-          ""
-        ],
-        [
-          "solder_mask_bridge|231299495|89060000|e0035884-ee8a-4994-a145-3bb6747da902|d2a0fe06-bb43-489f-a74f-c3ef155951e1",
-          ""
-        ],
-        [
-          "solder_mask_bridge|231499495|89060000|ab1d07fc-dece-419d-b191-c84ce4002c44|3fc856b9-eeed-481f-a500-42294ad962cb",
-          ""
-        ],
-        [
-          "solder_mask_bridge|231799495|89060000|d2a0fe06-bb43-489f-a74f-c3ef155951e1|9ceed9b9-0e22-465a-bb9b-8b76ff06f5a3",
-          ""
-        ],
-        [
-          "solder_mask_bridge|231999495|89060000|ae0d736f-d918-4ea9-b330-67b1b14ab9f0|ab1d07fc-dece-419d-b191-c84ce4002c44",
-          ""
-        ],
-        [
-          "solder_mask_bridge|232299495|89060000|9ceed9b9-0e22-465a-bb9b-8b76ff06f5a3|52081296-68ea-40c4-ba76-b6f9a991d905",
-          ""
-        ],
-        [
-          "solder_mask_bridge|232499495|89060000|4a5c95c2-2e5d-4a2f-8744-4b6cd79ab6bc|ae0d736f-d918-4ea9-b330-67b1b14ab9f0",
-          ""
-        ],
-        [
-          "solder_mask_bridge|232799495|89060000|52081296-68ea-40c4-ba76-b6f9a991d905|e36ba973-5890-4ce0-9b2c-753e5e64e32c",
-          ""
-        ],
-        [
-          "solder_mask_bridge|232999495|89060000|0c6ea541-8f15-4086-ac77-30d9bc446151|4a5c95c2-2e5d-4a2f-8744-4b6cd79ab6bc",
-          ""
-        ],
-        [
-          "solder_mask_bridge|233299495|89060000|e36ba973-5890-4ce0-9b2c-753e5e64e32c|5e659751-53c7-400d-8498-d8b4ac6d2fe5",
-          ""
-        ],
-        [
-          "solder_mask_bridge|233499495|89060000|e04947c4-5c93-462e-b708-8e9626a2c34b|0c6ea541-8f15-4086-ac77-30d9bc446151",
-          ""
-        ],
-        [
-          "solder_mask_bridge|233799495|89060000|5e659751-53c7-400d-8498-d8b4ac6d2fe5|21a03760-c20c-4847-88fc-d163fe208e4b",
-          ""
-        ],
-        [
-          "solder_mask_bridge|233999495|89060000|6b628870-7b44-41c1-a754-961d53e60f8d|e04947c4-5c93-462e-b708-8e9626a2c34b",
-          ""
-        ],
-        [
-          "solder_mask_bridge|234299495|89060000|21a03760-c20c-4847-88fc-d163fe208e4b|2ebe7a7c-745f-408e-bc9e-e611e3d5ec39",
-          ""
-        ],
-        [
-          "solder_mask_bridge|234499495|89060000|774600ec-394c-4a60-be23-3406984e1429|6b628870-7b44-41c1-a754-961d53e60f8d",
-          ""
-        ],
-        [
-          "solder_mask_bridge|234799495|89060000|2ebe7a7c-745f-408e-bc9e-e611e3d5ec39|b594de35-50ad-477f-a37f-d6a3994e88ce",
-          ""
-        ],
-        [
-          "solder_mask_bridge|234799495|92660000|6127fd59-047c-4bb5-9862-4a47bc03c625|9b5de4c9-b504-416c-96a3-46a6782f069f",
-          ""
-        ],
-        [
-          "solder_mask_bridge|234999495|89060000|e1bd2819-2dc2-41d9-875f-61aa80935291|774600ec-394c-4a60-be23-3406984e1429",
-          ""
-        ],
-        [
-          "solder_mask_bridge|234999495|92660000|96eac30b-9458-43c2-a773-383c129849a3|2dceb270-6fea-4bab-bf83-5d8d73aaee84",
-          ""
-        ],
-        [
-          "text_height|229199495|112160000|4396ad45-6514-4e81-bf45-7e77f11c715b|00000000-0000-0000-0000-000000000000",
-          ""
-        ],
-        [
-          "text_height|238689495|90090000|104c43f9-1e2f-4d10-981b-c3e9b0c2e4dd|00000000-0000-0000-0000-000000000000",
-          ""
-        ],
-        [
-          "text_thickness|230899495|113060000|d9e04053-b40f-4f56-9ffb-c7b0da302439|00000000-0000-0000-0000-000000000000",
-          ""
-        ]
-      ],
+      "drc_exclusions": [],
       "meta": {
         "version": 2
       },
@@ -349,8 +188,7 @@
       ],
       "track_widths": [
         0.0,
-        1.0,
-        2.0
+        0.3
       ],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
@@ -616,7 +454,6 @@
       "single_global_label": "ignore",
       "unannotated": "error",
       "unconnected_wire_endpoint": "warning",
-      "undefined_netclass": "error",
       "unit_value_mismatch": "error",
       "unresolved_variable": "error",
       "wire_dangling": "error"
@@ -627,7 +464,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "amplifier-brd.kicad_pro",
+    "filename": "amp-mezzanine.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -666,7 +503,7 @@
       "plot": "",
       "pos_files": "",
       "specctra_dsn": "",
-      "step": "amplifier-brd.step",
+      "step": "",
       "svg": "",
       "vrml": ""
     },
@@ -787,18 +624,9 @@
   },
   "sheets": [
     [
-      "4a199ccc-be1f-4132-9551-a46e36599bcb",
+      "8c7ea4fc-2c79-4942-bcea-c104e68fed52",
       "Root"
-    ],
-    [
-      "f2b7aa34-9911-40d3-beee-632deab3d3cc",
-      "OP AMP"
     ]
   ],
-  "text_variables": {
-    "BOARD_REV": "A0",
-    "DESIGNER": "SKM",
-    "PRJ_TITLE": "PICTURE-C/D Heater Amplifier Board",
-    "REVIEWER": ""
-  }
+  "text_variables": {}
 }
