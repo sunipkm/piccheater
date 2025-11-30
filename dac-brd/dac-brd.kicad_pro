@@ -74,6 +74,14 @@
         [
           "copper_edge_clearance|175000000|78000000|5a321412-58d9-4784-9398-ec3a6f3baf8e|d285be52-5649-434f-8b6f-9da44ef93d67",
           ""
+        ],
+        [
+          "lib_footprint_mismatch|150700000|93762500|19cc0fa9-a51b-4b3a-bfe5-c6fb537f79bc|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
+          "silk_over_copper|176599971|125841760|c154b9b2-b51c-407a-a582-b4986387ef00|00000000-0000-0000-0000-000000000000",
+          ""
         ]
       ],
       "meta": {
@@ -125,7 +133,7 @@
         "starved_thermal": "error",
         "text_height": "warning",
         "text_on_edge_cuts": "error",
-        "text_thickness": "warning",
+        "text_thickness": "ignore",
         "through_hole_pad_without_hole": "error",
         "too_many_vias": "error",
         "track_angle": "error",

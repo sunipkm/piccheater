@@ -1,4 +1,6 @@
 {
     "latex-workshop.view.pdf.invert": 0.9,
-    "latex-workshop.view.pdf.invertMode.enabled": "auto"
+    "latex-workshop.view.pdf.invertMode.enabled": "auto",
+    "rust-analyzer.check.allTargets": false,
+    "rust-analyzer.cargo.target": "thumbv8m.main-none-eabihf"
 }

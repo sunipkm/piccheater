@@ -6,7 +6,6 @@
 
 use bitfield_struct::bitfield;
 
-
 #[cfg(feature = "async")]
 mod async_impl;
 #[cfg(feature = "sync")]

@@ -276,6 +276,192 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "Jumper:SolderJumper_2_Open"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom no)
+			(on_board yes)
+			(property "Reference" "JP"
+				(at 0 2.032 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "SolderJumper_2_Open"
+				(at 0 -2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Solder Jumper, 2-pole, open"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "solder jumper SPST"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "SolderJumper*Open*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "SolderJumper_2_Open_0_1"
+				(polyline
+					(pts
+						(xy -0.254 1.016) (xy -0.254 -1.016)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(arc
+					(start -0.254 -1.016)
+					(mid -1.2656 0)
+					(end -0.254 1.016)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(arc
+					(start -0.254 -1.016)
+					(mid -1.2656 0)
+					(end -0.254 1.016)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(arc
+					(start 0.254 1.016)
+					(mid 1.2656 0)
+					(end 0.254 -1.016)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(arc
+					(start 0.254 1.016)
+					(mid 1.2656 0)
+					(end 0.254 -1.016)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.254 1.016) (xy 0.254 -1.016)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "SolderJumper_2_Open_1_1"
+				(pin passive line
+					(at -3.81 0 0)
+					(length 2.54)
+					(name "A"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 3.81 0 180)
+					(length 2.54)
+					(name "B"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "Jumper:SolderJumper_3_Open"
 			(pin_names
 				(offset 0)
@@ -1250,6 +1436,12 @@
 		(uuid "5cd20795-bd72-42c1-af50-4ff6a129c9f8")
 	)
 	(junction
+		(at 147.32 124.46)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "65d68a4f-56bb-4a45-9dfa-5f7547b179e3")
+	)
+	(junction
 		(at 199.39 99.06)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -1417,7 +1609,7 @@
 	)
 	(wire
 		(pts
-			(xy 116.84 124.46) (xy 151.13 124.46)
+			(xy 116.84 124.46) (xy 130.81 124.46)
 		)
 		(stroke
 			(width 0)
@@ -1484,6 +1676,16 @@
 			(type default)
 		)
 		(uuid "35108416-b3a8-473d-bed5-3fb0e1c13cc7")
+	)
+	(wire
+		(pts
+			(xy 147.32 124.46) (xy 147.32 130.81)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3787db49-9925-4808-ae56-f598b5bf1d67")
 	)
 	(wire
 		(pts
@@ -1687,6 +1889,16 @@
 	)
 	(wire
 		(pts
+			(xy 147.32 138.43) (xy 147.32 146.05)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "77f1daad-cf1c-4c9d-a3b4-0bad2ecbfb2a")
+	)
+	(wire
+		(pts
 			(xy 67.31 121.92) (xy 67.31 127)
 		)
 		(stroke
@@ -1694,6 +1906,16 @@
 			(type default)
 		)
 		(uuid "7c8f0fb3-b9ae-486a-b6e3-823ad1f0b8f1")
+	)
+	(wire
+		(pts
+			(xy 138.43 124.46) (xy 147.32 124.46)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "81482123-bf59-499e-abff-3e61a12287dc")
 	)
 	(wire
 		(pts
@@ -1734,6 +1956,16 @@
 			(type default)
 		)
 		(uuid "8bf9c609-c7dd-4272-a9a6-40af714d6b64")
+	)
+	(wire
+		(pts
+			(xy 147.32 124.46) (xy 151.13 124.46)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "98390559-efd2-4ec2-9907-1af754fbeb60")
 	)
 	(wire
 		(pts
@@ -2075,6 +2307,16 @@
 		)
 		(uuid "2b4c150c-bd25-4112-ad2f-d69f6bb0038b")
 	)
+	(label "STAT_PIN"
+		(at 129.54 124.46 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "4a968f87-905c-4f18-a9be-77adb4a60935")
+	)
 	(label "V_{RAW}"
 		(at 146.05 113.03 0)
 		(effects
@@ -2174,6 +2416,16 @@
 			(justify left bottom)
 		)
 		(uuid "a039c1d4-2b44-4cf7-883e-a0681f88d4b4")
+	)
+	(label "ILIM"
+		(at 120.65 125.73 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "c2268246-cd3d-430c-82cc-4aeb1560ce15")
 	)
 	(label "SDA"
 		(at 232.41 41.91 180)
@@ -2696,10 +2948,9 @@
 		(in_bom no)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "299367e6-8880-4277-9708-f3548db94468")
 		(property "Reference" "A10"
-			(at 199.39 60.96 0)
+			(at 199.39 65.024 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2712,6 +2963,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" "Jumper:SolderJumper-3_P1.3mm_Open_RoundedPad1.0x1.5mm"
@@ -2767,10 +3019,9 @@
 		(in_bom no)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "5262abfa-ba75-4f55-aa42-3a9a4fbb069a")
 		(property "Reference" "A01"
-			(at 220.98 35.56 0)
+			(at 220.98 39.624 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2783,6 +3034,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" "Jumper:SolderJumper-3_P1.3mm_Open_RoundedPad1.0x1.5mm"
@@ -3245,10 +3497,9 @@
 		(in_bom no)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "7cc0238b-df84-4777-bf87-6756c0e652ec")
 		(property "Reference" "A00"
-			(at 199.39 35.56 0)
+			(at 199.39 39.624 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3261,6 +3512,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" "Jumper:SolderJumper-3_P1.3mm_Open_RoundedPad1.0x1.5mm"
@@ -3309,6 +3561,180 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:C")
+		(at 147.32 134.62 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp yes)
+		(fields_autoplaced yes)
+		(uuid "882aab9b-753f-4ead-b46e-e7f00d232081")
+		(property "Reference" "C5"
+			(at 151.13 133.3499 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "0.01u"
+			(at 151.13 135.8899 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+			(at 148.2852 138.43 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://datasheets.kyocera-avx.com/AutoMLCCKAM.pdf"
+			(at 147.32 134.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Multilayer Ceramic Capacitors MLCC - SMD/SMT 50V 10 000pF X8R 080 5 10% AEC-Q200"
+			(at 147.32 134.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr" "KYOCERA AVX"
+			(at 147.32 134.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr #" "KAM21BR81H103KT"
+			(at 147.32 134.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser #" "581-KAM21BR81H103KT "
+			(at 147.32 134.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser URL" "https://www.mouser.com/ProductDetail/KYOCERA-AVX/KAM21BR81H103KT?qs=sGAEpiMZZMvsSlwiRhF8qrQG6leidpLjd2yh5HiSHZNsgkhmB7%252B%252BaA%3D%3D"
+			(at 147.32 134.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "1ccd70b6-231a-47df-ac3e-28ffc6e4704d")
+		)
+		(pin "1"
+			(uuid "d05d6b21-392a-44fb-914e-3a2e0abdd90d")
+		)
+		(instances
+			(project "amplifier-brd"
+				(path "/4a199ccc-be1f-4132-9551-a46e36599bcb/f2b7aa34-9911-40d3-beee-632deab3d3cc"
+					(reference "C5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Jumper:SolderJumper_2_Open")
+		(at 134.62 124.46 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(dnp no)
+		(uuid "98478990-9b50-4cd2-9db7-4b3dc90c9deb")
+		(property "Reference" "JP1"
+			(at 134.62 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "SolderJumper_2_Open"
+			(at 134.62 120.65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm"
+			(at 134.62 124.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 134.62 124.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Solder Jumper, 2-pole, open"
+			(at 134.62 124.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "a1d02f2b-816a-44a2-a729-0cd840812487")
+		)
+		(pin "1"
+			(uuid "bb7eac2d-252f-4254-a6e2-2fb45b719742")
+		)
+		(instances
+			(project ""
+				(path "/4a199ccc-be1f-4132-9551-a46e36599bcb/f2b7aa34-9911-40d3-beee-632deab3d3cc"
+					(reference "JP1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Jumper:SolderJumper_3_Open")
 		(at 220.98 67.31 0)
 		(unit 1)
@@ -3316,10 +3742,9 @@
 		(in_bom no)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "9c9aabd7-7094-434b-bb7b-018093827ff0")
 		(property "Reference" "A11"
-			(at 220.98 60.96 0)
+			(at 220.98 65.024 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3332,6 +3757,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" "Jumper:SolderJumper-3_P1.3mm_Open_RoundedPad1.0x1.5mm"
@@ -4201,6 +4627,72 @@
 			(project ""
 				(path "/4a199ccc-be1f-4132-9551-a46e36599bcb/f2b7aa34-9911-40d3-beee-632deab3d3cc"
 					(reference "R1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 147.32 146.05 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "ef313cfd-2fdc-4c48-b055-cd7dbb971790")
+		(property "Reference" "#PWR018"
+			(at 147.32 152.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 147.32 151.13 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 147.32 146.05 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 147.32 146.05 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 147.32 146.05 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "96781893-ea0e-4b41-af55-2d27ef044968")
+		)
+		(instances
+			(project "amplifier-brd"
+				(path "/4a199ccc-be1f-4132-9551-a46e36599bcb/f2b7aa34-9911-40d3-beee-632deab3d3cc"
+					(reference "#PWR018")
 					(unit 1)
 				)
 			)

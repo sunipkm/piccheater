@@ -1,5 +1,16 @@
 [workspace]
 resolver = "2"
 members = [
-    "drivers/dacx578"
+    "drivers/dacx578",
+    "drivers/sn74xx165", "firmware",
 ]
+
+[profile.release]
+debug = 0
+lto = true
+opt-level = 'z'
+
+[profile.dev]
+debug = 2
+lto = true
+opt-level = "z"

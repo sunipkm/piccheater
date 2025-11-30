@@ -1,0 +1,13 @@
+[package]
+name = "sn74xx165-pio"
+version = "0.0.1"
+authors = ["Sunip K. Mukherjee <sunipkmukherjee@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+embassy-rp = { version = "0.9" }
+fixed = "1.23"
+defmt = { version = "1.0", optional = true }
+
+[features]
+defmt = ["dep:defmt"]
