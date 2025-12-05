@@ -1,0 +1,11 @@
+[package]
+name = "ina233"
+version = "0.0.1"
+edition = "2024"
+
+[dependencies]
+embedded-hal = { version = "1.0", optional = true }
+embedded-hal-async = { version = "1.0", optional = true }
+bitfield-struct = "0.12"
+defmt = { version = "1.0", optional = true }
+uom = { version = "0.37", features = ["f32", "rational32", "si"] }

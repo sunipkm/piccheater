@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-    "drivers/dacx578",
+    "drivers/dacx578", "drivers/ina233",
     "drivers/sn74xx165", "firmware",
 ]
 
