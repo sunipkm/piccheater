@@ -1,4 +1,6 @@
 **/*-backups/*.zip
 **/*-info-cache
+**/*.kicad_sch-bak
+**/*.kicad_pcb-bak
 **/target
 .DS_Store
