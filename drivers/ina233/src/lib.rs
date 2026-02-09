@@ -2,8 +2,12 @@
 #![warn(missing_docs)]
 //! [`embedded-hal`] driver for the INA233 power monitor.
 
+use crate::interface::I2cInterface;
+pub use uom::si::f32::ElectricCurrent;
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
 #[repr(u8)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 /// INA233 I2C address pin configuration
 pub enum AddrPin {
     /// Address pin grounded.
@@ -18,25 +22,36 @@ pub enum AddrPin {
 }
 
 /// INA233 I2C driver
-pub struct Ina233<I2C> {
-    i2c: I2C,
-    address: u8,
+pub struct Ina233<I2C, D> {
+    i2c: I2cInterface<I2C>,
+    delay: D,
+    current_lsb: ElectricCurrent,
 }
 
-impl<I2C> Ina233<I2C> {
-    /// Create a new INA233 driver instance.
-    ///
-    /// # Arguments
-    /// - `i2c` - I2C peripheral implementing the embedded-hal I2C traits.
-    /// - `a0` - INA233 address pin A0 configuration.
-    /// - `a1` - INA233 address pin A1 configuration.
-    pub fn new(i2c: I2C, a0: AddrPin, a1: AddrPin) -> Self {
-        let base_address = 0x40;
-        let address = base_address | (a1 as u8) << 2 | (a0 as u8);
-        Self { i2c, address }
+/// INA233 Errors
+#[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub enum Error<I2CError> {
+    /// I2C bus error
+    I2C(I2CError),
+    /// Device identification error
+    DeviceId,
+}
+
+impl<I2CError> From<I2CError> for Error<I2CError> {
+    fn from(err: I2CError) -> Self {
+        Error::I2C(err)
     }
 }
 
-mod registers;
-mod blocking_impl;
+#[cfg(feature = "async")]
+pub use crate::async_impl::AsyncInterface;
+#[cfg(feature = "sync")]
+pub use crate::blocking_impl::SyncInterface;
+pub use crate::configuration::{Configuration, ConfigurationBuilder};
+
 mod async_impl;
+mod blocking_impl;
+mod configuration;
+mod interface;
+mod registers;

@@ -13,7 +13,7 @@ use fixed::types::extra::U8;
 use fixed::FixedU32;
 
 /// Shift register reader driven by PIO.
-pub struct PioShiftRegister<'d, PIO: Instance, const SM: usize, DMA: Channel> {
+pub struct PioShiftRegisterIn<'d, PIO: Instance, const SM: usize, DMA: Channel> {
     sm: StateMachine<'d, PIO, SM>,
     dma: Peri<'d, DMA>,
 }
@@ -24,12 +24,12 @@ pub struct PioShiftRegister<'d, PIO: Instance, const SM: usize, DMA: Channel> {
 /// RP2040: 133Mhz / 3 = 44.33Mhz pio clock -> 22.16Mhz GSPI clock
 pub const CLOCK_DIVIDER: FixedU32<U8> = FixedU32::from_bits(0x0300);
 
-impl<'d, PIO, const SM: usize, DMA> PioShiftRegister<'d, PIO, SM, DMA>
+impl<'d, PIO, const SM: usize, DMA> PioShiftRegisterIn<'d, PIO, SM, DMA>
 where
     DMA: Channel,
     PIO: Instance,
 {
-    /// Create a new instance of [`PioShiftRegister`].
+    /// Create a new instance of [`PioShiftRegisterIn`].
     pub fn new(
         common: &mut Common<'d, PIO>,
         mut sm: StateMachine<'d, PIO, SM>,

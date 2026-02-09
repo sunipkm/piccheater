@@ -12,3 +12,9 @@ use embassy_time::{Instant, Timer};
 use static_cell::StaticCell;
 
 use {defmt_rtt as _, panic_probe as _};
+
+#[embassy_executor::main]
+async fn main(spawner: Spawner) {
+    let p = embassy_rp::init(Default::default());
+    info!("Main core started");
+}

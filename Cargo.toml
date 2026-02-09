@@ -1,14 +1,28 @@
 [workspace]
 resolver = "2"
 members = [
-    "drivers/dacx578", "drivers/ina233",
-    "drivers/sn74xx165", "firmware",
+    "drivers/dacx578", 
+    "drivers/ina233",
+    "drivers/sn74xx165", 
+    "firmware",
 ]
+
+default-members = [
+    "firmware",
+]
+
+[workspace.dependencies]
+ina233 = { path = "drivers/ina233" }
+dacx578 = { path = "drivers/dacx578" }
+sn74xx165 = { path = "drivers/sn74xx165" }
 
 [profile.release]
 debug = 0
 lto = true
 opt-level = 'z'
+
+[profile.release.package."*"] # +
+opt-level = "z" # +
 
 [profile.dev]
 debug = 2
