@@ -11,6 +11,10 @@ default-members = [
     "firmware",
 ]
 
+exclude = [
+    "pcbs/amp-brd-v4/refs/mcp19061_calc",
+]
+
 [workspace.dependencies]
 ina233 = { path = "drivers/ina233" }
 dacx578 = { path = "drivers/dacx578" }

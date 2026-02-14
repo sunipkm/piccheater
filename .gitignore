@@ -3,4 +3,6 @@
 **/*.kicad_sch-bak
 **/*.kicad_pcb-bak
 **/target
+**/*.md
+!README.md
 .DS_Store
