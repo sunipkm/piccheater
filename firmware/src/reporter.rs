@@ -23,7 +23,6 @@ use uom::si::{
 use crate::{
     Measurement, MeasurementSender,
     resources::{I2cSnsDev, StaticI2cBus},
-    usb::TLM_READY,
 };
 
 bind_interrupts!(struct Irqs {
@@ -104,15 +103,14 @@ pub async fn i2c_report_task(i2c_bus: &'static StaticI2cBus<I2C1>, sender: Measu
                     let power = (current.abs() * voltage).get::<milliwatt>() as u32;
                     let current = current.get::<milliampere>() as i32;
                     let voltage = voltage.get::<millivolt>() as u32;
-                    if TLM_READY.load(core::sync::atomic::Ordering::Acquire)
-                        && sender
-                            .try_send(Measurement {
-                                source: sensor.address(),
-                                voltage,
-                                current,
-                                power,
-                            })
-                            .is_err()
+                    if sender
+                        .try_send(Measurement {
+                            source: sensor.address(),
+                            voltage,
+                            current,
+                            power,
+                        })
+                        .is_err()
                     {
                         error!(
                             "Failed to send measurement from sensor at {:#02x}: Channel full",

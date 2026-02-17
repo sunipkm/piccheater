@@ -1,8 +1,5 @@
 use embedded_hal_async::{delay::DelayNs, i2c};
-use uom::si::{
-    electric_potential::{microvolt, millivolt},
-    f32::{ElectricCurrent, ElectricPotential, Power},
-};
+use uom::si::f32::{ElectricCurrent, ElectricPotential, Power};
 
 use crate::{
     Error, Ina233,
@@ -155,7 +152,7 @@ where
         //     .await?; // Set to power down before calibration
         // let calibration = Calibration::from(configuration.calibration);
         // calibration.write_register(&mut i2c).await?; // Write calibration
-        configuration.adc_conf.write_register(&mut i2c).await?; // Write ADC configuration
+        // configuration.adc_conf.write_register(&mut i2c).await?; // Write ADC configuration
         Ok(Self {
             i2c,
             delay,
@@ -187,8 +184,8 @@ where
                 voltage_raw
             );
         }
-        let current = ElectricPotential::new::<microvolt>(voltage_raw.0 as f32 / 2.5) / self.shunt;
-        let voltage = ElectricPotential::new::<millivolt>(voltage_raw.0 as f32 * 1.25); // LSB = 1.25 mV
+        let current = ElectricPotential::from(current_raw) / self.shunt;
+        let voltage = ElectricPotential::from(voltage_raw); // LSB = 1.25 mV
         Ok((current, voltage))
     }
 
@@ -203,8 +200,8 @@ where
                 voltage_raw
             );
         }
-        let current = ElectricPotential::new::<microvolt>(voltage_raw.0 as f32 / 2.5) / self.shunt;
-        let voltage = ElectricPotential::new::<millivolt>(voltage_raw.0 as f32 * 1.25); // LSB = 1.25 mV
+        let current = ElectricPotential::from(current_raw) / self.shunt;
+        let voltage = ElectricPotential::from(voltage_raw); // LSB = 1.25 mV
         Ok(current * voltage)
     }
 
@@ -214,9 +211,7 @@ where
         {
             defmt::trace!("INA233: Raw Shunt Voltage: {:?}", shunt_raw);
         }
-        let shunt_voltage = ElectricPotential::new::<uom::si::electric_potential::microvolt>(
-            shunt_raw.0 as f32 * 2.5,
-        ); // LSB = 2.5 uV
+        let shunt_voltage = ElectricPotential::from(shunt_raw); // LSB = 2.5 uV
         Ok(shunt_voltage)
     }
 }

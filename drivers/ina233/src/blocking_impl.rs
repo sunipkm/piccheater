@@ -1,8 +1,5 @@
 use embedded_hal::{delay::DelayNs, i2c};
-use uom::si::{
-    electric_potential::{microvolt, millivolt},
-    f32::{ElectricCurrent, ElectricPotential, Power},
-};
+use uom::si::f32::{ElectricCurrent, ElectricPotential, Power};
 
 use crate::{
     Error, Ina233,
@@ -167,7 +164,7 @@ where
     }
 
     fn read(&mut self) -> Result<(ElectricCurrent, ElectricPotential), Error<I2C::Error>> {
-        let current_raw = LoadCurrent::read_register(&mut self.i2c)?;
+        let current_raw = ShuntVoltage::read_register(&mut self.i2c)?;
         let voltage_raw = LoadVoltage::read_register(&mut self.i2c)?;
         #[cfg(feature = "defmt")]
         {
@@ -177,13 +174,13 @@ where
                 voltage_raw
             );
         }
-        let current = ElectricPotential::new::<microvolt>(current_raw.0 as f32 / 2.5) / self.shunt;
-        let voltage = ElectricPotential::new::<millivolt>(voltage_raw.0 as f32 * 1.25); // LSB = 1.25 mV
+        let current = ElectricPotential::from(current_raw) / self.shunt;
+        let voltage = ElectricPotential::from(voltage_raw); // LSB = 1.25 mV
         Ok((current, voltage))
     }
 
     fn read_power(&mut self) -> Result<Power, Error<I2C::Error>> {
-        let current_raw = LoadCurrent::read_register(&mut self.i2c)?;
+        let current_raw = ShuntVoltage::read_register(&mut self.i2c)?;
         let voltage_raw = LoadVoltage::read_register(&mut self.i2c)?;
         #[cfg(feature = "defmt")]
         {
@@ -193,8 +190,8 @@ where
                 voltage_raw
             );
         }
-        let current = ElectricPotential::new::<microvolt>(current_raw.0 as f32 / 2.5) / self.shunt;
-        let voltage = ElectricPotential::new::<millivolt>(voltage_raw.0 as f32 * 1.25); // LSB = 1.25 mV
+        let current = ElectricPotential::from(current_raw) / self.shunt;
+        let voltage = ElectricPotential::from(voltage_raw); // LSB = 1.25 mV
         let power = current * voltage;
         Ok(power)
     }
@@ -205,9 +202,7 @@ where
         {
             defmt::trace!("INA233: Raw Shunt Voltage: {:?}", shunt_raw);
         }
-        let shunt_voltage = ElectricPotential::new::<uom::si::electric_potential::microvolt>(
-            shunt_raw.0 as f32 * 2.5,
-        ); // LSB = 2.5 uV
+        let shunt_voltage = ElectricPotential::from(shunt_raw); // LSB = 2.5 uV
         Ok(shunt_voltage)
     }
 }

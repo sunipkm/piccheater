@@ -1,5 +1,5 @@
 // use core::sync::atomic::{AtomicBool, Ordering};
-use core::{fmt::Write, sync::atomic::AtomicBool};
+use core::fmt::Write;
 use dacx578::{Address, AsyncFunctions as _, DacX578, ResetMode};
 use defmt::*;
 use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
@@ -36,8 +36,6 @@ bind_interrupts!(struct Irqs {
 
 // /// Signal to sensor tasks to shut down
 // pub(crate) static SHUTDOWN: AtomicBool = AtomicBool::new(false);
-
-pub static TLM_READY: AtomicBool = AtomicBool::new(false);
 
 type CdcAcmDevice = CdcAcmClass<'static, UsbDriver<'static, USB>>;
 type UsbDeviceDriver = UsbDevice<'static, UsbDriver<'static, USB>>;
@@ -279,12 +277,13 @@ pub async fn cdc_conf_task(
 #[embassy_executor::task]
 pub async fn cdc_tlm_task(usb: &'static mut CdcAcmDevice, receiver: MeasurementReceiver) {
     'main: loop {
-        TLM_READY.store(false, core::sync::atomic::Ordering::Release);
         usb.wait_connection().await;
-        trace!("USB connected for telemetry");
-        TLM_READY.store(true, core::sync::atomic::Ordering::Release);
         loop {
             let measurement = receiver.receive().await;
+            if !usb.rts() {
+                trace!("USB disconnected");
+                continue;
+            }
             let mut output = String::<256>::new();
             core::write!(
                 &mut output,

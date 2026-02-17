@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 use bitfield_struct::bitfield;
+use uom::si::{electric_potential::{microvolt, millivolt}, f32::ElectricPotential};
 
 pub(crate) trait ConvertRaw<const N: usize> {
     fn from_raw(raw: [u8; N]) -> Self
@@ -205,6 +206,13 @@ impl From<i16> for LoadVoltage {
 }
 
 impl_register!(LoadVoltage, 0x88, i16, 2);
+
+impl From<LoadVoltage> for ElectricPotential {
+    fn from(load_voltage: LoadVoltage) -> ElectricPotential {
+        ElectricPotential::new::<millivolt>(load_voltage.0 as f32 * 1.25) // LSB = 1.25 mV
+    }
+}
+
 pub(crate) struct ShuntVoltage(pub(crate) i16);
 
 impl From<i16> for ShuntVoltage {
@@ -214,6 +222,13 @@ impl From<i16> for ShuntVoltage {
 }
 
 impl_register!(ShuntVoltage, 0xd1, i16, 2);
+
+#[allow(clippy::from_over_into)]
+impl From<ShuntVoltage> for ElectricPotential {
+    fn from(shunt_voltage: ShuntVoltage) -> ElectricPotential {
+        ElectricPotential::new::<microvolt>(shunt_voltage.0 as f32 * 2.5) // LSB = 2.5 µV
+    }
+}
 
 pub(crate) struct LoadCurrent(pub(crate) i16);
 
