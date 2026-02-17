@@ -19,6 +19,7 @@ pub use blocking_impl::SyncFunctions;
 
 /// user_address can be set by pulling the ADDR0 pin high/low or leave it floating
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum Address {
     /// ADDR0 is low
@@ -29,9 +30,11 @@ pub enum Address {
     PinFloat = 0x4c,
 }
 
-/// Defines the output channel to set the voltage for
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "kmdparse", derive(kmdparse::Parsable))]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
+/// Defines the output channel to set the voltage for
 pub enum Channel {
     /// DAC output channel A
     A,
@@ -54,6 +57,9 @@ pub enum Channel {
 }
 
 #[bitfield(u8)]
+#[derive(PartialEq, Eq)]
+#[cfg_attr(feature = "kmdparse", derive(kmdparse::Parsable))]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 /// Struct to represent the state of all channels
 pub struct Channels {
     #[allow(non_snake_case)]
@@ -83,8 +89,10 @@ pub struct Channels {
 }
 
 /// The type of the command to send for a Command
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
+#[cfg_attr(feature = "kmdparse", derive(kmdparse::Parsable))]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum CommandType {
     /// Write to the channel's DAC input register
     Write = 0x0,
@@ -97,7 +105,9 @@ pub enum CommandType {
 }
 
 /// Read from the specified register
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "kmdparse", derive(kmdparse::Parsable))]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Register {
     /// Read the value from the specified channel input register
     ChannelInput(Channel),
@@ -112,7 +122,9 @@ pub enum Register {
 }
 
 /// Readout from the specified register
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "kmdparse", derive(kmdparse::Parsable))]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Configuration {
     /// Value read from the specified channel input register
     ChannelInput {
@@ -141,8 +153,10 @@ pub enum Configuration {
     Ldac(Channels),
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
+#[cfg_attr(feature = "kmdparse", derive(kmdparse::Parsable))]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 /// Power-down modes for the DACx578 devices
 pub enum PowerDownMode {
     /// Normal operation
@@ -155,8 +169,10 @@ pub enum PowerDownMode {
     HighZ = 0b11,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
+#[cfg_attr(feature = "kmdparse", derive(kmdparse::Parsable))]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 /// Clear code options for the DACx578 devices
 /// The Clear pin behavior is configured via the Clear Code register.
 pub enum ClearCode {
@@ -171,8 +187,10 @@ pub enum ClearCode {
 }
 
 /// Two bit flags indicating the reset mode for the DAC5578
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
+#[cfg_attr(feature = "kmdparse", derive(kmdparse::Parsable))]
 pub enum ResetMode {
     /// Software reset (default). Same as power-on reset (POR).
     Por = 0b00,

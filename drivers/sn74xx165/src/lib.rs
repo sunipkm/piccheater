@@ -74,15 +74,15 @@ where
                 /*
                  * Fig 8 in the datasheet shows the /PL pulse time as tW which is minimum 9.0ns.
                  * At 125MHz the RP2040 has a clock time of 8ns. So I need 2 clocks with /LD low
-                 * to be sure. However this is moot because I want to read Q ASAP, and the 
-                 * datasheet says the propagation time from /PL to Q is tPD, which is max of 22ns 
-                 * at 3V3. So I need to wait at least 22ns for the Q value to become ready before 
-                 * progressing. In theory the "set pins" instruction to bring down the /LD, plus 
-                 * the "set pins" to put /LD back, plus the setting of the loop counter, gives a 
-                 * pause of 3 RP2040 cycles, which is 24ns. That should be long enough, but it 
-                 * doesn't work. I think the time it takes /LD to fall, which is about 3ns to come 
-                 * down 1V5, makes the actual width of the pulse too short. I need to stall 2 more 
-                 * cycles to make it work. I'm not sure why. 
+                 * to be sure. However this is moot because I want to read Q ASAP, and the
+                 * datasheet says the propagation time from /PL to Q is tPD, which is max of 22ns
+                 * at 3V3. So I need to wait at least 22ns for the Q value to become ready before
+                 * progressing. In theory the "set pins" instruction to bring down the /LD, plus
+                 * the "set pins" to put /LD back, plus the setting of the loop counter, gives a
+                 * pause of 3 RP2040 cycles, which is 24ns. That should be long enough, but it
+                 * doesn't work. I think the time it takes /LD to fall, which is about 3ns to come
+                 * down 1V5, makes the actual width of the pulse too short. I need to stall 2 more
+                 * cycles to make it work. I'm not sure why.
                  */
                 "set pins, 0   side 0x00    [2]" // Write 0 to the load pin, wait
                 "set pins, 1   side 0x00"        // put load pin back
@@ -90,35 +90,35 @@ where
                 "set x, 7      side 0x00"        // 8 bits to read
                 /*
                  * Dropping from the /LD into the reading of the Q pin which is now ready.
-                 * Fig 8 says I need to wait tW (9.0ns) (which I do above) then tREM 
-                 * (which I think should be tREC, tREM doesn't appear anywhere else in 
-                 * the document) before sending the clock high. rRec is 6.0ns which is 
+                 * Fig 8 says I need to wait tW (9.0ns) (which I do above) then tREM
+                 * (which I think should be tREC, tREM doesn't appear anywhere else in
+                 * the document) before sending the clock high. rRec is 6.0ns which is
                  * less than the time of the "in pins" instruction, so no extra delay needed.
                  */
                 "lp:"
                 "in pins, 1    side 0x00"        // Pick up Q
                 /*
-                 * Fig 7 says the clock needs to go high for half a clock cycle. At 50MMhz 
-                 * that's 10ns. The first nop here is 8ns, so I stall another cycle. It 
-                 * turns out that for my 74LV165 the extra cycle stall isn't necessary, the 
-                 * shift register works without it, but it's correct so I keep it in. 
-                 * Fig 7 also says that the output is ready on the Q pin at the halfway 
-                 * point on the cycle, so no need to wait any longer before pulling clock 
+                 * Fig 7 says the clock needs to go high for half a clock cycle. At 50MMhz
+                 * that's 10ns. The first nop here is 8ns, so I stall another cycle. It
+                 * turns out that for my 74LV165 the extra cycle stall isn't necessary, the
+                 * shift register works without it, but it's correct so I keep it in.
+                 * Fig 7 also says that the output is ready on the Q pin at the halfway
+                 * point on the cycle, so no need to wait any longer before pulling clock
                  * low again.
                  */
                 "nop           side 0x01    [1]" // wait and drive clock high
                 /*
-                 * Fig 7 says that the Q pin is ready to read tPHL (same as tpd) after clock 
-                 * is driven high. That's max 21.5ns on my chip. This jmp and a 2 cycle stall 
-                 * represents a delay of 24ns so the data is ready on Q when I get back to the 
-                 * "in pins". The delay here is actually 3 cycles, the extra one being needed 
-                 * alongside the "side 0x00" to pull the clock pin low for 8ns. This negates the 
+                 * Fig 7 says that the Q pin is ready to read tPHL (same as tpd) after clock
+                 * is driven high. That's max 21.5ns on my chip. This jmp and a 2 cycle stall
+                 * represents a delay of 24ns so the data is ready on Q when I get back to the
+                 * "in pins". The delay here is actually 3 cycles, the extra one being needed
+                 * alongside the "side 0x00" to pull the clock pin low for 8ns. This negates the
                  * need for the extra nop above, saving that instruction.
                  */
                 "jmp x--,  lp  side 0x00    [3]" // Jump back for the next bit
-                /* 
-                 * All 8 bits are collected in the ISR. Push it back to the core. This triggers 
-                 * the DREQ which the DMA is waiting on, so the core code continues with the 
+                /*
+                 * All 8 bits are collected in the ISR. Push it back to the core. This triggers
+                 * the DREQ which the DMA is waiting on, so the core code continues with the
                  * value pushed here magically in its variable.
                  */
                 "push block    side 0x00"        // Push the read data to RX FIFO

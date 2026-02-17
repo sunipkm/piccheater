@@ -6,3 +6,5 @@
 **/*.md
 !README.md
 .DS_Store
+# KiCad lock files
+**/~*.lck

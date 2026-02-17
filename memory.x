@@ -1,18 +1,10 @@
 MEMORY {
     /*
-     * The Kiwi Maker Board has an external flash.
+     * The RP2350 has either external or internal flash.
      *
-     * 2 MiB is a safe default here, although production versions
-     * have 4 MiB (Winbond W25Q16JVUXIQ).
-     * 
-     * The WiFi firmware is embedded at the top of the flash memory.
-     * The available code size is hence reduced by 256K.
-     * 
-     * This is automatically handled by the build.rs script.
-     *
-     * This memory.x file is merely a template.
+     * 2 MiB is a safe default here, although a Pico 2 has 4 MiB.
      */
-    FLASH : ORIGIN = 0x10000000, LENGTH = 2048K
+    FLASH : ORIGIN = 0x10000000, LENGTH = 4096K
     /*
      * RAM consists of 8 banks, SRAM0-SRAM7, with a striped mapping.
      * This is usually good for performance, as it distributes load on

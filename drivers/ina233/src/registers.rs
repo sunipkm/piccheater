@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use bitfield_struct::bitfield;
 
 pub(crate) trait ConvertRaw<const N: usize> {
@@ -32,14 +33,19 @@ macro_rules! impl_register {
 
 #[bitfield(u16)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
+/// ADC configuration register for the INA233
 pub struct AdcConfig {
     #[bits(3, from=AdcMode::from_u8, into=AdcMode::into_u8)]
+    /// ADC operating mode (power-down, triggered, or continuous)
     pub mode: AdcMode,
     #[bits(3, from=ConversionTime::from_u8, into=ConversionTime::into_u8)]
+    /// Conversion time for shunt voltage measurements
     pub vshunt_conv_time: ConversionTime,
     #[bits(3, from=ConversionTime::from_u8, into=ConversionTime::into_u8)]
+    /// Conversion time for bus voltage measurements
     pub vbus_conv_time: ConversionTime,
     #[bits(3, from=Averages::from_u8, into=Averages::into_u8)]
+    /// Averaging mode (number of samples to average for each measurement)
     pub averaging: Averages,
     #[bits(4, access=RO, default=0b0100)]
     rsvd: u8,
@@ -47,9 +53,13 @@ pub struct AdcConfig {
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
+/// ADC operating modes for the INA233
 pub enum AdcMode {
+    /// Power-down mode (default)
     PowerDown,
+    /// Triggered mode: a single measurement is taken when the mode is set
     Triggered(MeasureActive),
+    /// Continuous mode: measurements are taken continuously at the specified conversion time and averaging settings
     Continuous(MeasureActive),
 }
 
@@ -62,10 +72,14 @@ impl Default for AdcMode {
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
+/// Measurement types for triggered and continuous ADC modes
 pub enum MeasureActive {
+    /// Measure shunt voltage only
     Shunt = 0b01,
+    /// Measure bus voltage only
     Bus = 0b10,
     #[default]
+    /// Measure both shunt and bus voltage
     Both = 0b11,
 }
 
@@ -95,15 +109,24 @@ impl AdcMode {
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
+/// Conversion times for ADC measurements in the INA233
 pub enum ConversionTime {
+    /// 140 microseconds
     Us140 = 0b000,
+    /// 204 microseconds
     Us204 = 0b001,
+    /// 332 microseconds
     Us332 = 0b010,
+    /// 588 microseconds
     Us588 = 0b011,
     #[default]
+    /// 1.1 milliseconds
     Ms1_1 = 0b100,
+    /// 2.116 milliseconds
     Ms2_116 = 0b101,
+    /// 4.156 milliseconds
     Ms4_156 = 0b110,
+    /// 8.244 milliseconds
     Ms8_244 = 0b111,
 }
 
@@ -130,15 +153,24 @@ impl ConversionTime {
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
+/// Number of samples averaged for each measurement in the INA233
 pub enum Averages {
     #[default]
+    /// No averaging, a single sample is taken for each measurement
     Avg1 = 0b000,
+    /// Average of 4 samples
     Avg4 = 0b001,
+    /// Average of 16 samples
     Avg16 = 0b010,
+    /// Average of 64 samples
     Avg64 = 0b011,
+    /// Average of 128 samples
     Avg128 = 0b100,
+    /// Average of 256 samples
     Avg256 = 0b101,
+    /// Average of 512 samples
     Avg512 = 0b110,
+    /// Average of 1024 samples
     Avg1024 = 0b111,
 }
 

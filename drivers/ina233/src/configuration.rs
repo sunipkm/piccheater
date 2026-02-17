@@ -1,3 +1,5 @@
+use uom::si::f32::ElectricalResistance;
+
 use crate::{AddrPin, registers::AdcConfig};
 
 #[derive(Default)]
@@ -15,20 +17,22 @@ pub struct Configuration {
     pub(crate) a1: AddrPin,
     pub(crate) adc_conf: AdcConfig,
     pub(crate) calibration: u16,
-    pub(crate) current_lsb: uom::si::f32::ElectricCurrent,
+    // pub(crate) current_lsb: uom::si::f32::ElectricCurrent,
+    pub(crate) shunt: ElectricalResistance,
 }
 
 #[cfg(feature = "defmt")]
 impl defmt::Format for Configuration {
     fn format(&self, fmt: defmt::Formatter) {
+        use uom::si::electrical_resistance::milliohm;
+
         defmt::write!(
             fmt,
-            "Address A0={}, A1={}, ADC={:#?}, LSB={}uA, CAL={:x}h",
+            "Address A0={}, A1={}, ADC={:#?}, Shunt={:?}, CAL={:x}h",
             self.a0,
             self.a1,
             self.adc_conf,
-            self.current_lsb
-                .get::<uom::si::electric_current::microampere>(),
+            self.shunt.get::<milliohm>(),
             self.calibration
         )
     }
@@ -43,6 +47,15 @@ impl ConfigurationBuilder {
 
     /// Set the address pin A1 configuration.
     pub fn addr_a1(mut self, a1: AddrPin) -> Self {
+        self.a1 = a1;
+        self
+    }
+
+    /// Set the address pin configuration for both A0 and A1.
+    pub fn addr(mut self, addr: u8) -> Self {
+        let a0 = AddrPin::from(addr);
+        let a1 = AddrPin::from(addr >> 2);
+        self.a0 = a0;
         self.a1 = a1;
         self
     }
@@ -77,7 +90,7 @@ impl ConfigurationBuilder {
                     uom::si::electric_potential::microvolt,
                 >(65536.0 * 2.5) // Max shunt voltage = 2^16 * 2.5uV
                     / shunt_resistance;
-        let max_current = match self.max_current {
+        let _max_current = match self.max_current {
             Some(c) if c > current_limit => {
                 #[cfg(feature = "defmt")]
                 defmt::warn!(
@@ -99,7 +112,7 @@ impl ConfigurationBuilder {
             a1: self.a1,
             adc_conf: self.adc_conf,
             calibration,
-            current_lsb: max_current / 32768.0,
+            shunt: shunt_resistance,
         }
     }
 }

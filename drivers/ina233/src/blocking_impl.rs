@@ -1,6 +1,6 @@
 use embedded_hal::{delay::DelayNs, i2c};
 use uom::si::{
-    electric_potential::millivolt,
+    electric_potential::{microvolt, millivolt},
     f32::{ElectricCurrent, ElectricPotential, Power},
 };
 
@@ -139,17 +139,17 @@ where
         }
         i2c.i2c.write(i2c.address, &[0x12])?; // Reset command
         delay.delay_ms(100); // Wait for reset to complete
-        configuration
-            .adc_conf
-            .with_mode(crate::registers::AdcMode::PowerDown)
-            .write_register(&mut i2c)?; // Set to power down before calibration
-        let calibration = Calibration::from(configuration.calibration);
-        calibration.write_register(&mut i2c)?; // Write calibration
+        // configuration
+        //     .adc_conf
+        //     .with_mode(crate::registers::AdcMode::PowerDown)
+        //     .write_register(&mut i2c)?; // Set to power down before calibration
+        // let calibration = Calibration::from(configuration.calibration);
+        // calibration.write_register(&mut i2c)?; // Write calibration
         configuration.adc_conf.write_register(&mut i2c)?; // Write ADC configuration
         Ok(Self {
             i2c,
             delay,
-            current_lsb: configuration.current_lsb,
+            shunt: configuration.shunt,
         })
     }
 }
@@ -177,19 +177,25 @@ where
                 voltage_raw
             );
         }
-        let current = self.current_lsb * current_raw.0 as f32;
+        let current = ElectricPotential::new::<microvolt>(current_raw.0 as f32 / 2.5) / self.shunt;
         let voltage = ElectricPotential::new::<millivolt>(voltage_raw.0 as f32 * 1.25); // LSB = 1.25 mV
         Ok((current, voltage))
     }
 
     fn read_power(&mut self) -> Result<Power, Error<I2C::Error>> {
-        let power_raw = LoadPower::read_register(&mut self.i2c)?;
+        let current_raw = LoadCurrent::read_register(&mut self.i2c)?;
+        let voltage_raw = LoadVoltage::read_register(&mut self.i2c)?;
         #[cfg(feature = "defmt")]
         {
-            defmt::trace!("INA233: Raw Power: {:?}", power_raw);
+            defmt::trace!(
+                "INA233: Raw Current: {:?}, Raw Voltage: {:?}",
+                current_raw,
+                voltage_raw
+            );
         }
-        let power =
-            self.current_lsb * ElectricPotential::new::<millivolt>(1.25) * power_raw.0 as f32; // Power LSB = 25 * Current LSB
+        let current = ElectricPotential::new::<microvolt>(current_raw.0 as f32 / 2.5) / self.shunt;
+        let voltage = ElectricPotential::new::<millivolt>(voltage_raw.0 as f32 * 1.25); // LSB = 1.25 mV
+        let power = current * voltage;
         Ok(power)
     }
 

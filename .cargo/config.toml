@@ -1,6 +1,8 @@
 [target.'cfg(all(target_arch = "arm", target_os = "none"))']
-# runner = "probe-rs run --chip RP2040 --protocol swd" # "elf2uf2-rs -d"
-runner = "probe-rs run --chip RP235x --protocol swd" # "elf2uf2-rs -d"
+# runner = "probe-rs run --chip RP2040 --protocol swd"
+runner = "probe-rs run --chip RP235x --protocol swd"
+# runner = "elf2uf2-rs -d"
+# runner = "picotool load -u -v -x -t elf"
 
 [build]
 target = "thumbv8m.main-none-eabihf" # RP2350x
@@ -17,3 +19,4 @@ rustflags = [
 
 [env]
 DEFMT_LOG = "debug"
+EMBASSY_USB_MAX_INTERFACE_COUNT = "6" # 0 -> Configuration interface, 2 -> Report interface, 4 -> Logger interface

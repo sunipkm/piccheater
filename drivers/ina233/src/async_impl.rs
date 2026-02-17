@@ -1,6 +1,6 @@
 use embedded_hal_async::{delay::DelayNs, i2c};
 use uom::si::{
-    electric_potential::millivolt,
+    electric_potential::{microvolt, millivolt},
     f32::{ElectricCurrent, ElectricPotential, Power},
 };
 
@@ -51,7 +51,7 @@ where
             defmt::trace!(
                 "INA233: Writing register 0x{:02X}: {:?}",
                 Self::ADDRESS,
-                self
+                self.to_raw()
             );
         }
         iface
@@ -61,7 +61,6 @@ where
         #[cfg(feature = "defmt")]
         {
             defmt::trace!("INA233: Wrote register 0x{:02X}", Self::ADDRESS);
-            defmt::trace!("INA233: Data: {:?}", Self::read_register(iface).await?);
         }
         Ok(())
     }
@@ -126,12 +125,16 @@ where
         let mut delay = delay;
         let base_address = 0x40;
         let address = base_address | (configuration.a1 as u8) << 2 | (configuration.a0 as u8);
+        #[cfg(feature = "defmt")]
+        {
+            defmt::trace!("[INA233] Initializing at address {:#02x}", address);
+        }
         let mut i2c = I2cInterface { i2c, address };
         let mfrid = MfrId::read_register(&mut i2c).await?;
         if mfrid.id() != *b"TI" {
             #[cfg(feature = "defmt")]
             {
-                defmt::error!("INA233: Unexpected Manufacturer ID: {:?}", mfrid.id());
+                defmt::error!("[INA233] Unexpected Manufacturer ID: {:?}", mfrid.id());
             }
             return Err(Error::DeviceId);
         }
@@ -139,24 +142,24 @@ where
         if mfrmodel.model() != *b"INA233" {
             #[cfg(feature = "defmt")]
             {
-                defmt::error!("INA233: Unexpected Model: {:?}", mfrmodel.model());
+                defmt::error!("[INA233] Unexpected Model: {:?}", mfrmodel.model());
             }
             return Err(Error::DeviceId);
         }
         i2c.i2c.write(i2c.address, &[0x12]).await?; // Reset command
         delay.delay_ms(100).await; // Wait for reset to complete
-        configuration
-            .adc_conf
-            .with_mode(crate::registers::AdcMode::PowerDown)
-            .write_register(&mut i2c)
-            .await?; // Set to power down before calibration
-        let calibration = Calibration::from(configuration.calibration);
-        calibration.write_register(&mut i2c).await?; // Write calibration
+        // configuration
+        //     .adc_conf
+        //     .with_mode(crate::registers::AdcMode::PowerDown)
+        //     .write_register(&mut i2c)
+        //     .await?; // Set to power down before calibration
+        // let calibration = Calibration::from(configuration.calibration);
+        // calibration.write_register(&mut i2c).await?; // Write calibration
         configuration.adc_conf.write_register(&mut i2c).await?; // Write ADC configuration
         Ok(Self {
             i2c,
             delay,
-            current_lsb: configuration.current_lsb,
+            shunt: configuration.shunt,
         })
     }
 }
@@ -174,7 +177,7 @@ where
     }
 
     async fn read(&mut self) -> Result<(ElectricCurrent, ElectricPotential), Error<I2C::Error>> {
-        let current_raw = LoadCurrent::read_register(&mut self.i2c).await?;
+        let current_raw = ShuntVoltage::read_register(&mut self.i2c).await?;
         let voltage_raw = LoadVoltage::read_register(&mut self.i2c).await?;
         #[cfg(feature = "defmt")]
         {
@@ -184,20 +187,25 @@ where
                 voltage_raw
             );
         }
-        let current = self.current_lsb * current_raw.0 as f32;
+        let current = ElectricPotential::new::<microvolt>(voltage_raw.0 as f32 / 2.5) / self.shunt;
         let voltage = ElectricPotential::new::<millivolt>(voltage_raw.0 as f32 * 1.25); // LSB = 1.25 mV
         Ok((current, voltage))
     }
 
     async fn read_power(&mut self) -> Result<Power, Error<I2C::Error>> {
-        let power_raw = LoadPower::read_register(&mut self.i2c).await?;
+        let current_raw = ShuntVoltage::read_register(&mut self.i2c).await?;
+        let voltage_raw = LoadVoltage::read_register(&mut self.i2c).await?;
         #[cfg(feature = "defmt")]
         {
-            defmt::trace!("INA233: Raw Power: {:?}", power_raw);
+            defmt::trace!(
+                "INA233: Raw Current: {:?}, Raw Voltage: {:?}",
+                current_raw,
+                voltage_raw
+            );
         }
-        let power =
-            self.current_lsb * ElectricPotential::new::<millivolt>(1.25) * power_raw.0 as f32; // Power LSB = 25 * Current LSB
-        Ok(power)
+        let current = ElectricPotential::new::<microvolt>(voltage_raw.0 as f32 / 2.5) / self.shunt;
+        let voltage = ElectricPotential::new::<millivolt>(voltage_raw.0 as f32 * 1.25); // LSB = 1.25 mV
+        Ok(current * voltage)
     }
 
     async fn read_shunt(&mut self) -> Result<ElectricPotential, Error<I2C::Error>> {

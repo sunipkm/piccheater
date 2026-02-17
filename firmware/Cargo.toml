@@ -21,7 +21,7 @@ embassy-rp = { version = "0.9", features = [
     "unstable-pac",
     "time-driver",
     "critical-section-impl",
-    "rp235xb",
+    "rp235xa",
 ] }
 embassy-usb = { version = "0.5" }
 embassy-futures = { version = "0.1" }
@@ -55,7 +55,11 @@ assign-resources = { git = "https://github.com/adamgreig/assign-resources", rev 
 crc16 = "0.4"
 dtoa = { version = "1.0" }
 libm = { version = "0.2", default-features = false }
-kmdparse = "0.0.2"
+kmdparse = { workspace = true }
+uom = { version = "0.37", default-features = false, features = ["f32", "si", "autoconvert"] }
+
+dacx578 = { workspace = true }
+ina233 = { workspace = true, features = ["defmt"] }
 
 [features]
 defmt = []

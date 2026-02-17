@@ -4,6 +4,7 @@
 
 use crate::interface::I2cInterface;
 pub use uom::si::f32::ElectricCurrent;
+use uom::si::f32::ElectricalResistance;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
 #[repr(u8)]
@@ -21,11 +22,36 @@ pub enum AddrPin {
     Scl = 0b11,
 }
 
+impl AddrPin {
+    /// Returns the valid I2C address range for the INA233 based on the address pin configuration.
+    pub const fn address_range() -> core::ops::RangeInclusive<u8> {
+        0x40..=0x4f
+    }
+}
+
+impl From<u8> for AddrPin {
+    fn from(addr: u8) -> Self {
+        match addr & 0b11 {
+            0 => AddrPin::Gnd,
+            1 => AddrPin::Vdd,
+            2 => AddrPin::Sda,
+            _ => AddrPin::Scl,
+        }
+    }
+}
+
 /// INA233 I2C driver
 pub struct Ina233<I2C, D> {
     i2c: I2cInterface<I2C>,
     delay: D,
-    current_lsb: ElectricCurrent,
+    shunt: ElectricalResistance,
+}
+
+impl<I2C, D> Ina233<I2C, D> {
+    /// Get the I2C address of the INA233 device.
+    pub const fn address(&self) -> u8 {
+        self.i2c.address
+    }
 }
 
 /// INA233 Errors
@@ -49,6 +75,7 @@ pub use crate::async_impl::AsyncInterface;
 #[cfg(feature = "sync")]
 pub use crate::blocking_impl::SyncInterface;
 pub use crate::configuration::{Configuration, ConfigurationBuilder};
+pub use crate::registers::{AdcConfig, AdcMode, Averages, ConversionTime};
 
 mod async_impl;
 mod blocking_impl;
