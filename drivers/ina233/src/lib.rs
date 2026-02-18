@@ -3,8 +3,9 @@
 //! [`embedded-hal`] driver for the INA233 power monitor.
 
 use crate::interface::I2cInterface;
+use crate::registers::Calibration;
 pub use uom::si::f32::ElectricCurrent;
-use uom::si::f32::ElectricalResistance;
+pub use uom::si::f32::ElectricalResistance;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
 #[repr(u8)]
@@ -44,7 +45,8 @@ impl From<u8> for AddrPin {
 pub struct Ina233<I2C, D> {
     i2c: I2cInterface<I2C>,
     delay: D,
-    shunt: ElectricalResistance,
+    lsb: ElectricCurrent,
+    calibration: Calibration,
 }
 
 impl<I2C, D> Ina233<I2C, D> {

@@ -145,18 +145,15 @@ where
         }
         i2c.i2c.write(i2c.address, &[0x12]).await?; // Reset command
         delay.delay_ms(100).await; // Wait for reset to complete
-        // configuration
-        //     .adc_conf
-        //     .with_mode(crate::registers::AdcMode::PowerDown)
-        //     .write_register(&mut i2c)
-        //     .await?; // Set to power down before calibration
-        // let calibration = Calibration::from(configuration.calibration);
-        // calibration.write_register(&mut i2c).await?; // Write calibration
-        // configuration.adc_conf.write_register(&mut i2c).await?; // Write ADC configuration
+
+        let calibration = Calibration::from(configuration.calibration);
+        calibration.write_register(&mut i2c).await?; // Write calibration
+        configuration.adc_conf.write_register(&mut i2c).await?; // Write ADC configuration
         Ok(Self {
             i2c,
             delay,
-            shunt: configuration.shunt,
+            lsb: configuration.lsb,
+            calibration,
         })
     }
 }
@@ -169,12 +166,13 @@ where
     async fn reset(&mut self, configuration: AdcConfig) -> Result<(), Error<I2C::Error>> {
         self.i2c.i2c.write(self.i2c.address, &[0x12]).await?; // Reset command
         self.delay.delay_ms(100).await; // Wait for reset to complete
-        configuration.write_register(&mut self.i2c).await?;
+        self.calibration.write_register(&mut self.i2c).await?; // Write calibration
+        configuration.write_register(&mut self.i2c).await?; // Write ADC configuration
         Ok(())
     }
 
     async fn read(&mut self) -> Result<(ElectricCurrent, ElectricPotential), Error<I2C::Error>> {
-        let current_raw = ShuntVoltage::read_register(&mut self.i2c).await?;
+        let current_raw = LoadCurrent::read_register(&mut self.i2c).await?;
         let voltage_raw = LoadVoltage::read_register(&mut self.i2c).await?;
         #[cfg(feature = "defmt")]
         {
@@ -184,25 +182,19 @@ where
                 voltage_raw
             );
         }
-        let current = ElectricPotential::from(current_raw) / self.shunt;
+        let current = current_raw.into_current(self.lsb);
         let voltage = ElectricPotential::from(voltage_raw); // LSB = 1.25 mV
         Ok((current, voltage))
     }
 
     async fn read_power(&mut self) -> Result<Power, Error<I2C::Error>> {
-        let current_raw = ShuntVoltage::read_register(&mut self.i2c).await?;
-        let voltage_raw = LoadVoltage::read_register(&mut self.i2c).await?;
+        let power_raw = LoadPower::read_register(&mut self.i2c).await?;
         #[cfg(feature = "defmt")]
         {
-            defmt::trace!(
-                "INA233: Raw Current: {:?}, Raw Voltage: {:?}",
-                current_raw,
-                voltage_raw
-            );
+            defmt::trace!("INA233: Raw Power: {:?}", power_raw);
         }
-        let current = ElectricPotential::from(current_raw) / self.shunt;
-        let voltage = ElectricPotential::from(voltage_raw); // LSB = 1.25 mV
-        Ok(current * voltage)
+        let power = ElectricPotential::from(power_raw) * self.lsb; // Power LSB = Current LSB * 25
+        Ok(power)
     }
 
     async fn read_shunt(&mut self) -> Result<ElectricPotential, Error<I2C::Error>> {

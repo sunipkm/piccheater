@@ -13,7 +13,7 @@ use embassy_time::{Delay, Duration, Ticker};
 use ina233::{AdcConfig, AsyncInterface as _, ConfigurationBuilder, Ina233};
 use static_cell::StaticCell;
 use uom::si::{
-    electric_current::{ampere, milliampere},
+    electric_current::{ampere, microampere, milliampere},
     electric_potential::{millivolt, volt},
     electrical_resistance::milliohm,
     f32::{ElectricCurrent, ElectricalResistance},
@@ -62,7 +62,7 @@ pub async fn i2c_report_task(i2c_bus: &'static StaticI2cBus<I2C1>, sender: Measu
     for addr in addrs.iter() {
         let config = ConfigurationBuilder::default()
             .addr(*addr)
-            .max_expected_current(ElectricCurrent::new::<ampere>(1.0))
+            .current_lsb(ElectricCurrent::new::<microampere>(128.0))
             .adc_config(
                 AdcConfig::default()
                     .with_vbus_conv_time(ina233::ConversionTime::Ms4_156)

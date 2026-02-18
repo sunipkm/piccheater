@@ -1,6 +1,9 @@
 #![allow(dead_code)]
 use bitfield_struct::bitfield;
-use uom::si::{electric_potential::{microvolt, millivolt}, f32::ElectricPotential};
+use uom::si::{
+    electric_potential::{microvolt, millivolt},
+    f32::{ElectricCurrent, ElectricPotential},
+};
 
 pub(crate) trait ConvertRaw<const N: usize> {
     fn from_raw(raw: [u8; N]) -> Self
@@ -240,6 +243,12 @@ impl From<i16> for LoadCurrent {
 
 impl_register!(LoadCurrent, 0x89, i16, 2);
 
+impl LoadCurrent {
+    pub(crate) fn into_current(self, lsb: ElectricCurrent) -> ElectricCurrent {
+        self.0 as f32 * lsb
+    }
+}
+
 pub(crate) struct LoadPower(pub(crate) u16);
 
 impl From<u16> for LoadPower {
@@ -249,6 +258,12 @@ impl From<u16> for LoadPower {
 }
 
 impl_register!(LoadPower, 0x97, u16, 2);
+
+impl From<LoadPower> for ElectricPotential {
+    fn from(load_power: LoadPower) -> ElectricPotential {
+        ElectricPotential::new::<microvolt>(load_power.0 as f32 * 25.0) // Power LSB = Current LSB * 25
+    }
+}
 
 #[bitfield(u32)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
