@@ -1,7 +1,6 @@
 use uom::{
     num_traits::float::FloatCore,
     si::{
-        electric_current::ampere,
         electric_potential::{microvolt, volt},
         f32::{ElectricCurrent, ElectricPotential},
         ratio::ratio,
@@ -59,7 +58,7 @@ impl ConfigurationBuilder {
     }
 
     /// Set the address pin configuration for both A0 and A1.
-    pub fn addr(mut self, addr: u8) -> Self {
+    pub fn address(mut self, addr: u8) -> Self {
         let a0 = AddrPin::from(addr);
         let a1 = AddrPin::from(addr >> 2);
         self.a0 = a0;
@@ -94,14 +93,27 @@ impl ConfigurationBuilder {
     /// allowed value.
     pub fn build(self, shunt_resistance: uom::si::f32::ElectricalResistance) -> Configuration {
         let max_lsb = ElectricPotential::new::<microvolt>(2.56) / shunt_resistance; // Max LSB based on shunt voltage range
-        let lsb = self.lsb.unwrap_or(max_lsb); // Default to max possible LSB if not provided
+        let lsb = self.lsb.map_or_else(|| {
+            #[cfg(feature = "defmt")]
+            {
+                use uom::si::electric_current::microampere;
+
+                defmt::warn!(
+                    "[INA233] No current LSB provided. Defaulting to max possible LSB of {} uA based on shunt resistance.",
+                    max_lsb.get::<microampere>()
+                );
+            }
+            max_lsb
+        }, |lsb| lsb); // Default to max possible LSB if not provided
         if lsb > max_lsb {
             #[cfg(feature = "defmt")]
             {
+                use uom::si::electric_current::microampere;
+
                 defmt::warn!(
-                    "[INA233] Provided current LSB {} A exceeds maximum allowed {} A based on shunt resistance. Clamping to max.",
-                    lsb.get::<ampere>() * 32768.0,
-                    max_lsb.get::<ampere>() * 32768.0,
+                    "[INA233] Provided current LSB {} uA exceeds maximum allowed {} uA based on shunt resistance. Clamping to max.",
+                    lsb.get::<microampere>(),
+                    max_lsb.get::<microampere>(),
                 );
             }
         }
@@ -113,8 +125,8 @@ impl ConfigurationBuilder {
         {
             use uom::si::{electric_current::microampere, electrical_resistance::milliohm};
 
-            defmt::trace!(
-                "[INA233] Calculated calibration value: {} (LSB: {} A, Shunt: {} Ω)",
+            defmt::info!(
+                "[INA233] Calculated calibration value: {} (LSB: {} uA, Shunt: {} Ω)",
                 calibration,
                 lsb.get::<microampere>(),
                 shunt_resistance.get::<milliohm>()

@@ -37,9 +37,10 @@ macro_rules! impl_register {
 
 #[bitfield(u16)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(PartialEq, Eq)]
 /// ADC configuration register for the INA233
 pub struct AdcConfig {
-    #[bits(3, from=AdcMode::from_u8, into=AdcMode::into_u8)]
+    #[bits(3, from=AdcMode::from_u8, into=AdcMode::into_u8, default=AdcMode::const_default())]
     /// ADC operating mode (power-down, triggered, or continuous)
     pub mode: AdcMode,
     #[bits(3, from=ConversionTime::from_u8, into=ConversionTime::into_u8)]
@@ -70,6 +71,12 @@ pub enum AdcMode {
 impl Default for AdcMode {
     fn default() -> Self {
         Self::Continuous(MeasureActive::default())
+    }
+}
+
+impl AdcMode {
+    pub(crate) const fn const_default() -> Self {
+        Self::Continuous(MeasureActive::Both)
     }
 }
 
@@ -324,10 +331,11 @@ const fn to_bits_u16(bytes: [u8; 2]) -> u16 {
 impl_register!(MfrRevision, 0x9b, u32, 4);
 
 #[bitfield(u16)]
+#[derive(PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub(crate) struct Calibration {
     #[bits(15, default = 1)]
-    pub calibration: i16,
+    pub calibration: u16,
     #[bits(1, default = 0)]
     rsvd: u8,
 }

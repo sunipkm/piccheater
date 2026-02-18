@@ -64,6 +64,10 @@ pub enum Error<I2CError> {
     I2C(I2CError),
     /// Device identification error
     DeviceId,
+    /// Calibration read-back did not match the written value
+    CalibrationMismatch,
+    /// ADC configuration read-back did not match the written value
+    ConfigurationMismatch,
 }
 
 impl<I2CError> From<I2CError> for Error<I2CError> {

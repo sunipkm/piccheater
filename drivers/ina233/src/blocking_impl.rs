@@ -47,9 +47,13 @@ where
                 self
             );
         }
-        iface
-            .i2c
-            .transaction(iface.address, &mut [i2c::Operation::Write(&self.to_raw())])?;
+        iface.i2c.transaction(
+            iface.address,
+            &mut [
+                i2c::Operation::Write(&[Self::ADDRESS]),
+                i2c::Operation::Write(&self.to_raw()),
+            ],
+        )?;
         #[cfg(feature = "defmt")]
         {
             defmt::trace!("INA233: Wrote register 0x{:02X}", Self::ADDRESS);
@@ -117,12 +121,16 @@ where
         let mut delay = delay;
         let base_address = 0x40;
         let address = base_address | (configuration.a1 as u8) << 2 | (configuration.a0 as u8);
+        #[cfg(feature = "defmt")]
+        {
+            defmt::trace!("[INA233] Initializing at address {:#02x}", address);
+        }
         let mut i2c = I2cInterface { i2c, address };
         let mfrid = MfrId::read_register(&mut i2c)?;
         if mfrid.id() != *b"TI" {
             #[cfg(feature = "defmt")]
             {
-                defmt::error!("INA233: Unexpected Manufacturer ID: {:?}", mfrid.id());
+                defmt::error!("[INA233] Unexpected Manufacturer ID: {:?}", mfrid.id());
             }
             return Err(Error::DeviceId);
         }
@@ -130,15 +138,61 @@ where
         if mfrmodel.model() != *b"INA233" {
             #[cfg(feature = "defmt")]
             {
-                defmt::error!("INA233: Unexpected Model: {:?}", mfrmodel.model());
+                defmt::error!("[INA233] Unexpected Model: {:?}", mfrmodel.model());
             }
             return Err(Error::DeviceId);
         }
         i2c.i2c.write(i2c.address, &[0x12])?; // Reset command
         delay.delay_ms(100); // Wait for reset to complete
+
         let calibration = Calibration::from(configuration.calibration);
         calibration.write_register(&mut i2c)?; // Write calibration
+        let new_calibration = Calibration::read_register(&mut i2c)?;
+        #[cfg(feature = "defmt")]
+        {
+            defmt::trace!(
+                "[INA233] Written calibration value: {}",
+                configuration.calibration
+            );
+            defmt::trace!("[INA233] Verified calibration value: {}", new_calibration,);
+            if calibration != new_calibration {
+                defmt::warn!(
+                    "[INA233] Calibration mismatch: written {}, read {}",
+                    calibration.calibration(),
+                    new_calibration.calibration()
+                );
+            }
+        }
+        if calibration != new_calibration {
+            return Err(Error::CalibrationMismatch);
+        }
         configuration.adc_conf.write_register(&mut i2c)?; // Write ADC configuration
+        let new_adc_conf = AdcConfig::read_register(&mut i2c)?;
+        #[cfg(feature = "defmt")]
+        {
+            defmt::trace!(
+                "[INA233] Written ADC configuration: {:?}",
+                configuration.adc_conf
+            );
+            defmt::trace!(
+                "[INA233] Verified ADC configuration: {} => Avg={:?}, Bus Read Time={:?}, Shunt Read Time={:?}, Mode={:?}",
+                new_adc_conf,
+                new_adc_conf.averaging(),
+                new_adc_conf.vbus_conv_time(),
+                new_adc_conf.vshunt_conv_time(),
+                new_adc_conf.mode()
+            );
+            if configuration.adc_conf != new_adc_conf {
+                defmt::warn!(
+                    "[INA233] ADC configuration mismatch: written {:?}, read {:?}",
+                    configuration.adc_conf,
+                    new_adc_conf
+                );
+            }
+        }
+        if configuration.adc_conf != new_adc_conf {
+            return Err(Error::ConfigurationMismatch);
+        }
         Ok(Self {
             i2c,
             delay,
@@ -157,7 +211,45 @@ where
         self.i2c.i2c.write(self.i2c.address, &[0x12])?; // Reset command
         self.delay.delay_ms(100); // Wait for reset to complete
         self.calibration.write_register(&mut self.i2c)?; // Write calibration
+        let new_calibration = Calibration::read_register(&mut self.i2c)?;
+        #[cfg(feature = "defmt")]
+        {
+            defmt::trace!(
+                "INA233: Written calibration value: {}, Read back: {}",
+                self.calibration.calibration(),
+                new_calibration.calibration()
+            );
+            if self.calibration != new_calibration {
+                defmt::warn!(
+                    "INA233: Calibration mismatch: written {}, read {}",
+                    self.calibration.calibration(),
+                    new_calibration.calibration()
+                );
+            }
+        }
+        if self.calibration != new_calibration {
+            return Err(Error::CalibrationMismatch); // Use DeviceId error for calibration mismatch
+        }
         configuration.write_register(&mut self.i2c)?; // Write ADC configuration
+        let new_configuration = AdcConfig::read_register(&mut self.i2c)?;
+        #[cfg(feature = "defmt")]
+        {
+            defmt::trace!(
+                "INA233: Written ADC configuration: {:?}, Read back: {:?}",
+                configuration,
+                new_configuration
+            );
+            if configuration != new_configuration {
+                defmt::warn!(
+                    "INA233: ADC configuration mismatch: written {:?}, read {:?}",
+                    configuration,
+                    new_configuration
+                );
+            }
+        }
+        if configuration != new_configuration {
+            return Err(Error::ConfigurationMismatch); // Use DeviceId error for ADC configuration mismatch
+        }
         Ok(())
     }
 
