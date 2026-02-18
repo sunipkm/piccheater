@@ -5,6 +5,7 @@
 **/target
 **/*.md
 !README.md
+!CHANGELOG.md
 .DS_Store
 # KiCad lock files
 **/~*.lck

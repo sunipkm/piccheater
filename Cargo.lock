@@ -976,6 +976,8 @@ dependencies = [
 [[package]]
 name = "kmdparse"
 version = "0.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc23d20dc1ea23977a6feee2e58d9ffde145be22479ebe35c27e2e9f82163663"
 dependencies = [
  "heapless 0.9.2",
  "kmdparse-derive",
@@ -984,6 +986,8 @@ dependencies = [
 [[package]]
 name = "kmdparse-derive"
 version = "0.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "421bacb1bf2a9b6fb69de8fa53d5cbfc1111f8158d01b87590861a9e9814365f"
 dependencies = [
  "linked-hash-map",
  "proc-macro2",

@@ -15,7 +15,7 @@ exclude = ["pcbs/amp-brd-v4/refs/mcp19061_calc"]
 ina233 = { path = "drivers/ina233" }
 dacx578 = { path = "drivers/dacx578" }
 sn74xx165 = { path = "drivers/sn74xx165" }
-kmdparse = { version = "0.0.3", path = "/home/sunip/Codes/rust/kmdparse" }
+kmdparse = { version = "0.0.3" }
 
 [profile.release]
 debug = 0
