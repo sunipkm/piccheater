@@ -1,3 +1,7 @@
+#[cfg(feature = "uom")]
+use uom::si::f32::ElectricPotential;
+use uom::si::ratio::ratio;
+
 use crate::{
     Channel, Channels, ClearCode, CommandType, Configuration, DacX578, PowerDownMode, Register,
 };
@@ -8,13 +12,50 @@ pub(crate) const PD_REG: u8 = 0x40;
 pub(crate) const CC_REG: u8 = 0x50;
 pub(crate) const LDAC_REG: u8 = 0x60;
 
-impl<I2C> DacX578<I2C> {
-    /// Get the command bytes
-    pub(crate) fn get_command_bytes(command: CommandType, channel: Channel, value: u16) -> [u8; 3] {
+impl<I2C, T: ValidValue> DacX578<I2C, T> {
+    pub(crate) fn get_command_bytes(
+        &self,
+        command: CommandType,
+        channel: Channel,
+        value: T,
+    ) -> [u8; 3] {
+        let value = value.scale(self.scale);
         let command_byte = (command as u8) | (channel as u8);
         let high_byte = (value >> 8) as u8;
         let low_byte = (value & 0xff) as u8;
         [command_byte, high_byte, low_byte]
+    }
+}
+
+/// Valid value that can be written to
+/// the DAC.
+pub trait ValidValue: Copy {
+    /// Scale the value to u16
+    fn scale(self, scale: Self) -> u16;
+    /// Get the zero scale value
+    fn zero() -> Self;
+}
+
+impl ValidValue for u16 {
+    fn scale(self, _scale: Self) -> u16 {
+        self
+    }
+
+    fn zero() -> u16 {
+        0u16
+    }
+}
+
+#[cfg(feature = "uom")]
+impl ValidValue for ElectricPotential {
+    fn scale(self, scale: Self) -> u16 {
+        (self * u16::MAX as f32 / scale).get::<ratio>() as u16
+    }
+
+    fn zero() -> Self {
+        use uom::ConstZero;
+
+        ElectricPotential::ZERO
     }
 }
 

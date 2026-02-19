@@ -197,8 +197,8 @@ where
             }
         }
         if configuration.adc_conf != new_adc_conf {
-             return Err(Error::ConfigurationMismatch);
-         }
+            return Err(Error::ConfigurationMismatch);
+        }
         Ok(Self {
             i2c,
             delay,

@@ -22,6 +22,10 @@ use embassy_usb::{
 use heapless::String;
 use kmdparse::parse;
 use static_cell::StaticCell;
+use uom::{
+    ConstZero,
+    si::{electric_potential::millivolt, f32::ElectricPotential},
+};
 
 use crate::{
     MeasurementReceiver,
@@ -153,8 +157,16 @@ pub async fn cdc_conf_task(
         }
         info!("I2C 0> Found {} devices: {:#02x}", addrs.len(), addrs);
     }
-    let mut dac0 = DacX578::new(I2cDevice::new(i2c), Address::PinHigh);
-    let mut dac1 = DacX578::new(I2cDevice::new(i2c), Address::PinLow);
+    let mut dac0 = DacX578::new(
+        I2cDevice::new(i2c),
+        Address::PinHigh,
+        ElectricPotential::new::<millivolt>(2048.0),
+    );
+    let mut dac1 = DacX578::new(
+        I2cDevice::new(i2c),
+        Address::PinLow,
+        ElectricPotential::new::<millivolt>(2048.0),
+    );
     if let Err(e) = dac0.reset(ResetMode::Por).await {
         log::error!("Failed to reset DAC0: {:?}", e);
         error!("Failed to reset DAC0: {:?}", e);
@@ -206,11 +218,21 @@ pub async fn cdc_conf_task(
                             value,
                         } => match dac {
                             Dacs::Dac0 => {
-                                let res = dac0.write_and_update(channel, value).await;
+                                let res = dac0
+                                    .write_and_update(
+                                        channel,
+                                        ElectricPotential::new::<millivolt>(value),
+                                    )
+                                    .await;
                                 usb.respond("Write to DAC0", res).await;
                             }
                             Dacs::Dac1 => {
-                                let res = dac1.write_and_update(channel, value).await;
+                                let res = dac1
+                                    .write_and_update(
+                                        channel,
+                                        ElectricPotential::new::<millivolt>(value),
+                                    )
+                                    .await;
                                 usb.respond("Write to DAC1", res).await;
                             }
                             Dacs::Dac2 => {
@@ -229,8 +251,14 @@ pub async fn cdc_conf_task(
                         }
                         Commands::AllOff => {
                             dac_en.set_low();
-                            let r1 = dac0.write_and_update(dacx578::Channel::All, 0).await.err();
-                            let r2 = dac1.write_and_update(dacx578::Channel::All, 0).await.err();
+                            let r1 = dac0
+                                .write_and_update(dacx578::Channel::All, ElectricPotential::ZERO)
+                                .await
+                                .err();
+                            let r2 = dac1
+                                .write_and_update(dacx578::Channel::All, ElectricPotential::ZERO)
+                                .await
+                                .err();
                             usb.report_ok("All outputs off", (r1.is_none(), r2.is_none()))
                                 .await;
                         }
@@ -248,7 +276,8 @@ pub async fn cdc_conf_task(
                         Commands::Help => {
                             let help_message = "Available commands:\r\n\
                             \t- read-dac <dac> <channel>: Read the value from the specified DAC and channel\r\n\
-                            \t- write-dac <dac> <channel> <value>: Write the specified value to the specified DAC and channel\r\n\
+                            \t- write-dac <dac> <channel> <value>: Write the specified value to the specified DAC and channel.\r\n\
+                            \t\tValue is an unsigned integer in millivolts.
                             \t- enable-outputs: Enable the DAC outputs\r\n\
                             \t- disable-outputs: Disable the DAC outputs\r\n\
                             \t- all-off: Disable outputs and set all DAC channels to 0\r\n\

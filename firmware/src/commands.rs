@@ -26,7 +26,7 @@ pub enum Commands {
     WriteDac {
         dac: Dacs,
         channel: dacx578::Channel,
-        value: u16,
+        value: f32,
     },
     AllOff,
     EnableOutputs,

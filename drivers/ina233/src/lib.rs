@@ -83,7 +83,9 @@ pub use crate::blocking_impl::SyncInterface;
 pub use crate::configuration::{Configuration, ConfigurationBuilder};
 pub use crate::registers::{AdcConfig, AdcMode, Averages, ConversionTime};
 
+#[cfg(feature = "async")]
 mod async_impl;
+#[cfg(feature = "sync")]
 mod blocking_impl;
 mod configuration;
 mod interface;

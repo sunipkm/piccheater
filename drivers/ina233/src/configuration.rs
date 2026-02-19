@@ -93,7 +93,7 @@ impl ConfigurationBuilder {
     /// allowed value.
     pub fn build(self, shunt_resistance: uom::si::f32::ElectricalResistance) -> Configuration {
         let max_lsb = ElectricPotential::new::<microvolt>(2.56) / shunt_resistance; // Max LSB based on shunt voltage range
-        let lsb = self.lsb.map_or_else(|| {
+        let lsb = self.lsb.unwrap_or_else(|| {
             #[cfg(feature = "defmt")]
             {
                 use uom::si::electric_current::microampere;
@@ -104,7 +104,7 @@ impl ConfigurationBuilder {
                 );
             }
             max_lsb
-        }, |lsb| lsb); // Default to max possible LSB if not provided
+        }); // Default to max possible LSB if not provided
         if lsb > max_lsb {
             #[cfg(feature = "defmt")]
             {

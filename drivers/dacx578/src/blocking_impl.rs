@@ -1,9 +1,9 @@
 use embedded_hal::i2c::I2c;
 
-use crate::{Channel, Configuration, Register, ResetMode};
+use crate::{Channel, Configuration, Register, ResetMode, ValidValue};
 
 /// Trait to define synchronous functions for the DAC device.
-pub trait SyncFunctions<I2C, E>
+pub trait SyncFunctions<I2C, E, T>
 where
     I2C: I2c<Error = E>,
 {
@@ -13,15 +13,15 @@ where
     fn configure(&mut self, config: Configuration) -> Result<(), E>;
     /// Write a value to a specific channel.
     /// The upper N bits are used depending on the DAC resolution.
-    fn write(&mut self, channel: Channel, value: u16) -> Result<(), E>;
+    fn write(&mut self, channel: Channel, value: T) -> Result<(), E>;
     /// Update a specific channel with a new value.
     /// The upper N bits are used depending on the DAC resolution.
     fn update(&mut self, channel: Channel) -> Result<(), E>;
     /// Write and update a specific channel with a new value.
     /// The upper N bits are used depending on the DAC resolution.
-    fn write_and_update(&mut self, channel: Channel, value: u16) -> Result<(), E>;
+    fn write_and_update(&mut self, channel: Channel, value: T) -> Result<(), E>;
     /// Write new value to a channel and update all channels (global LDAC).
-    fn write_and_update_all(&mut self, channel: Channel, value: u16) -> Result<(), E>;
+    fn write_and_update_all(&mut self, channel: Channel, value: T) -> Result<(), E>;
     /// Reset the device with the specified reset mode.
     fn reset(&mut self, mode: ResetMode) -> Result<(), E>;
     /// Wake up all devices on the bus.
@@ -36,9 +36,10 @@ where
     }
 }
 
-impl<I2C, E> SyncFunctions<I2C, E> for crate::DacX578<I2C>
+impl<I2C, E, T> SyncFunctions<I2C, E, T> for crate::DacX578<I2C, T>
 where
     I2C: I2c<Error = E>,
+    T: ValidValue,
 {
     fn read(&mut self, register: Register) -> Result<Configuration, E> {
         let mut buf = [0u8; 2];
@@ -53,23 +54,23 @@ where
         self.i2c.write(self.address, &bytes)
     }
 
-    fn write(&mut self, channel: Channel, value: u16) -> Result<(), E> {
-        let cmd = Self::get_command_bytes(crate::CommandType::Write, channel, value);
+    fn write(&mut self, channel: Channel, value: T) -> Result<(), E> {
+        let cmd = self.get_command_bytes(crate::CommandType::Write, channel, value);
         self.i2c.write(self.address, &cmd)
     }
 
     fn update(&mut self, channel: Channel) -> Result<(), E> {
-        let cmd = Self::get_command_bytes(crate::CommandType::Update, channel, 0);
+        let cmd = self.get_command_bytes(crate::CommandType::Update, channel, T::zero());
         self.i2c.write(self.address, &cmd)
     }
 
-    fn write_and_update(&mut self, channel: Channel, value: u16) -> Result<(), E> {
-        let write_cmd = Self::get_command_bytes(crate::CommandType::WriteUpdate, channel, value);
+    fn write_and_update(&mut self, channel: Channel, value: T) -> Result<(), E> {
+        let write_cmd = self.get_command_bytes(crate::CommandType::WriteUpdate, channel, value);
         self.i2c.write(self.address, &write_cmd)
     }
 
-    fn write_and_update_all(&mut self, channel: Channel, value: u16) -> Result<(), E> {
-        let write_cmd = Self::get_command_bytes(crate::CommandType::WriteUpdateAll, channel, value);
+    fn write_and_update_all(&mut self, channel: Channel, value: T) -> Result<(), E> {
+        let write_cmd = self.get_command_bytes(crate::CommandType::WriteUpdateAll, channel, value);
         self.i2c.write(self.address, &write_cmd)
     }
 

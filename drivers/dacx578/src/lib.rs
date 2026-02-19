@@ -17,6 +17,8 @@ pub use async_impl::AsyncFunctions;
 #[cfg(feature = "sync")]
 pub use blocking_impl::SyncFunctions;
 
+pub use details::ValidValue;
+
 /// user_address can be set by pulling the ADDR0 pin high/low or leave it floating
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
@@ -205,17 +207,20 @@ pub enum ResetMode {
 /// DAC5578 is a 8-bit DAC.
 /// DAC6578 is a 10-bit DAC.
 /// DAC7578 is a 12-bit DAC.
-pub struct DacX578<I2C> {
+pub struct DacX578<I2C, T> {
     i2c: I2C,
     address: u8,
+    scale: T,
 }
 
-impl<I2C> DacX578<I2C> {
+#[cfg(feature = "uom")]
+impl<I2C, T: ValidValue> DacX578<I2C, T> {
     /// Creates a new instance of the DACx578 driver.
-    pub fn new(i2c: I2C, address: Address) -> Self {
+    pub fn new(i2c: I2C, address: Address, scale: T) -> Self {
         DacX578 {
             i2c,
             address: address as u8,
+            scale,
         }
     }
 }

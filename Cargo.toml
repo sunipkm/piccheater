@@ -12,10 +12,11 @@ default-members = ["firmware"]
 exclude = ["pcbs/amp-brd-v4/refs/mcp19061_calc"]
 
 [workspace.dependencies]
-ina233 = { path = "drivers/ina233" }
-dacx578 = { path = "drivers/dacx578" }
-sn74xx165 = { path = "drivers/sn74xx165" }
+ina233 = { path = "drivers/ina233", default-features = false }
+dacx578 = { path = "drivers/dacx578", default-features = false }
+sn74xx165 = { path = "drivers/sn74xx165", default-features = false}
 kmdparse = { version = "0.0.3" }
+uom = { version = "0.38", default-features = false }
 
 [profile.release]
 debug = 0
