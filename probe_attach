@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+probe-rs attach target/thumbv8m.main-none-eabihf/release/piccheater-firmware
