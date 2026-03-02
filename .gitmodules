@@ -1,0 +1,3 @@
+[submodule "pcbs"]
+	path = pcbs
+	url = https://github.com/sunipkm/piccheater-pcbs
