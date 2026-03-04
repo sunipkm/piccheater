@@ -48,90 +48,110 @@ pub fn report_spawner(spawner: &Spawner, dev: I2cSnsDev, sender: MeasurementSend
 
 #[embassy_executor::task]
 pub async fn i2c_report_task(i2c_bus: &'static StaticI2cBus<I2C1>, sender: MeasurementSender) {
+    info!("I2C report task started");
     let mut ticker = Ticker::every(Duration::from_secs(1));
     let mut addrs = heapless::Vec::<u8, 16>::new();
-    {
-        let mut i2c = i2c_bus.lock().await;
-        for addr in ina233::AddrPin::address_range() {
-            i2c.blocking_read(addr, &mut [0; 1])
-                .is_ok()
-                .then(|| addrs.push(addr).ok());
-        }
-    }
     let mut sensors = heapless::Vec::<Ina233<_, _>, 16>::new();
-    for addr in addrs.iter() {
-        let config = ConfigurationBuilder::default()
-            .address(*addr)
-            .current_lsb(ElectricCurrent::new::<microampere>(96.0))
-            .adc_config(
-                AdcConfig::default()
-                    .with_vbus_conv_time(ina233::ConversionTime::Ms4_156)
-                    .with_vshunt_conv_time(ina233::ConversionTime::Ms4_156),
-            )
-            .build(ElectricalResistance::new::<milliohm>(20.0));
-        let i2c_bus = I2cDevice::new(i2c_bus);
-        match Ina233::new_async(i2c_bus, Delay, config).await {
-            Ok(s) => {
-                info!("Initialized INA233 at address {:#02x}", addr);
-                sensors.push(s).ok()
+    'main: loop {
+        addrs.clear();
+        sensors.clear();
+        while addrs.is_empty() {
+            let mut i2c = i2c_bus.lock().await;
+            for addr in ina233::AddrPin::address_range() {
+                i2c.blocking_read(addr, &mut [0; 1])
+                    // .inspect_err(|e| {
+                    //     error!("I2C read error at address {:#02x}: {:?}", addr, e);
+                    // })
+                    .is_ok()
+                    .then(|| addrs.push(addr).ok());
             }
-            Err(e) => {
-                log::error!(
-                    "Failed to initialize INA233 at address {:#02x}: {:?}",
-                    addr,
-                    e
-                );
-                error!(
-                    "Failed to initialize INA233 at address {:#02x}: {:?}",
-                    addr, e
-                );
-                continue;
-            }
-        };
-    }
-    loop {
-        for sensor in sensors.iter_mut() {
-            match sensor.read().await {
-                Ok((current, voltage)) => {
-                    info!(
-                        "Sensor at {:#02x}: Current = {} A, Voltage = {} V, Power = {} W",
-                        sensor.address(),
-                        current.get::<ampere>(),
-                        voltage.get::<volt>(),
-                        (current * voltage).get::<watt>()
-                    );
-                    let power = (current.abs() * voltage).get::<milliwatt>() as u32;
-                    let current = current.get::<milliampere>() as i32;
-                    let voltage = voltage.get::<millivolt>() as u32;
-                    if sender
-                        .try_send(Measurement {
-                            source: sensor.address(),
-                            voltage,
-                            current,
-                            power,
-                        })
-                        .is_err()
-                    {
-                        error!(
-                            "Failed to send measurement from sensor at {:#02x}: Channel full",
-                            sensor.address()
-                        );
-                    }
+            info!(
+                "Found {} INA233 devices at addresses: {:#02x}",
+                addrs.len(),
+                addrs.as_slice(),
+            );
+            log::info!(
+                "Found {} INA233 devices at addresses: {:?}",
+                addrs.len(),
+                addrs.as_slice(),
+            );
+            ticker.next().await;
+        }
+        for addr in addrs.iter() {
+            let config = ConfigurationBuilder::default()
+                .address(*addr)
+                .current_lsb(ElectricCurrent::new::<microampere>(96.0))
+                .adc_config(
+                    AdcConfig::default()
+                        .with_vbus_conv_time(ina233::ConversionTime::Ms4_156)
+                        .with_vshunt_conv_time(ina233::ConversionTime::Ms4_156),
+                )
+                .build(ElectricalResistance::new::<milliohm>(20.0));
+            let i2c_bus = I2cDevice::new(i2c_bus);
+            match Ina233::new_async(i2c_bus, Delay, config).await {
+                Ok(s) => {
+                    info!("Initialized INA233 at address {:#02x}", addr);
+                    sensors.push(s).ok()
                 }
                 Err(e) => {
                     log::error!(
-                        "Failed to read from sensor at {:#02x}: {:?}",
-                        sensor.address(),
+                        "Failed to initialize INA233 at address {:#02x}: {:?}",
+                        addr,
                         e
                     );
                     error!(
-                        "Failed to read from sensor at {:#02x}: {:?}",
-                        sensor.address(),
-                        e
+                        "Failed to initialize INA233 at address {:#02x}: {:?}",
+                        addr, e
                     );
+                    continue 'main;
+                }
+            };
+        }
+        loop {
+            for sensor in sensors.iter_mut() {
+                match sensor.read().await {
+                    Ok((current, voltage)) => {
+                        info!(
+                            "Sensor at {:#02x}: Current = {} A, Voltage = {} V, Power = {} W",
+                            sensor.address(),
+                            current.get::<ampere>(),
+                            voltage.get::<volt>(),
+                            (current * voltage).get::<watt>()
+                        );
+                        let power = (current.abs() * voltage).get::<milliwatt>() as u32;
+                        let current = current.get::<milliampere>() as i32;
+                        let voltage = voltage.get::<millivolt>() as u32;
+                        if sender
+                            .try_send(Measurement {
+                                source: sensor.address(),
+                                voltage,
+                                current,
+                                power,
+                            })
+                            .is_err()
+                        {
+                            error!(
+                                "Failed to send measurement from sensor at {:#02x}: Channel full",
+                                sensor.address()
+                            );
+                        }
+                    }
+                    Err(e) => {
+                        log::error!(
+                            "Failed to read from sensor at {:#02x}: {:?}",
+                            sensor.address(),
+                            e
+                        );
+                        error!(
+                            "Failed to read from sensor at {:#02x}: {:?}",
+                            sensor.address(),
+                            e
+                        );
+                        continue 'main;
+                    }
                 }
             }
+            ticker.next().await;
         }
-        ticker.next().await;
     }
 }

@@ -63,7 +63,7 @@ pub fn usb_task(spawner: &Spawner, dev: UsbDacDev, receiver: MeasurementReceiver
 
     // Create the USB driver and attach interrupts
     let driver = UsbDriver::new(dev.usb, Irqs);
-    info!("USB driver created");
+    trace!("USB driver created");
     // Create the USB device configuration
     let mut config = UsbConfig::new(0xc001, 0xfee1);
     config.manufacturer = Some("LoCSST/PIC-D");
@@ -71,7 +71,7 @@ pub fn usb_task(spawner: &Spawner, dev: UsbDacDev, receiver: MeasurementReceiver
     config.serial_number = Some("2026-0001");
     config.max_power = 100;
     config.max_packet_size_0 = 64;
-    info!("USB configuration created");
+    trace!("USB configuration created");
 
     // Allocate static buffers for USB descriptors and control transfers
     let conf_desc = CONF_DESC.init([0; 256]);
@@ -85,7 +85,7 @@ pub fn usb_task(spawner: &Spawner, dev: UsbDacDev, receiver: MeasurementReceiver
 
     // USB builder to construct the device with the specified configuration and classes
     let mut usb_builder = Builder::new(driver, config, conf_desc, bos_desc, &mut [], ctrl_buf);
-    info!("USB builder created");
+    trace!("USB builder created");
 
     // Initialize the CDC ACM classes for both the configuration and telemetry interfaces
     let cdc_conf = CDC_DEVICE.init(CdcAcmClass::new(&mut usb_builder, state_conf, 64));
@@ -96,7 +96,7 @@ pub fn usb_task(spawner: &Spawner, dev: UsbDacDev, receiver: MeasurementReceiver
     if let Err(e) = spawner.spawn(cdc_log_task(cdc_log)) {
         error!("Failed to spawn CDC log task: {:?}", e);
     } else {
-        info!("CDC log task spawned");
+        trace!("CDC log task spawned");
     }
 
     // Build the USB device
@@ -123,19 +123,19 @@ pub fn usb_task(spawner: &Spawner, dev: UsbDacDev, receiver: MeasurementReceiver
         error!("Failed to spawn USB device task: {:?}", e);
         log::error!("Failed to spawn USB device task: {:?}", e);
     } else {
-        info!("USB device task spawned");
+        trace!("USB device task spawned");
     }
     if let Err(e) = spawner.spawn(cdc_conf_task(cdc_conf, i2c_bus, amp_en_pin)) {
         error!("Failed to spawn CDC config task: {:?}", e);
         log::error!("Failed to spawn CDC config task: {:?}", e);
     } else {
-        info!("CDC configuration input task spawned");
+        trace!("CDC configuration input task spawned");
     }
     if let Err(e) = spawner.spawn(cdc_tlm_task(cdc_tlm, receiver)) {
         error!("Failed to spawn CDC telemetry task: {:?}", e);
         log::error!("Failed to spawn CDC telemetry task: {:?}", e);
     } else {
-        info!("CDC telemetry task spawned");
+        trace!("CDC telemetry task spawned");
     }
 }
 
@@ -146,16 +146,17 @@ pub async fn cdc_conf_task(
     dac_en: &'static mut StaticOutput,
 ) {
     {
-        let mut addrs = heapless::Vec::<u8, 128>::new();
+        const ADDR_LEN: usize = dacx578::Address::address_range().len();
+        let mut addrs = heapless::Vec::<u8, ADDR_LEN>::new();
         {
             let mut i2c = i2c.lock().await;
-            for addr in 0x03..=0x77 {
+            for addr in dacx578::Address::address_range() {
                 i2c.blocking_read(addr, &mut [0; 1])
                     .is_ok()
                     .then(|| addrs.push(addr).ok());
             }
         }
-        info!("I2C 0> Found {} devices: {:#02x}", addrs.len(), addrs);
+        trace!("I2C 0> Found {} devices: {:#02x}", addrs.len(), addrs);
     }
     let mut dac0 = DacX578::new(
         I2cDevice::new(i2c),
@@ -207,7 +208,7 @@ pub async fn cdc_conf_task(
                                 }
                                 Dacs::Dac2 => {
                                     // DAC2 is not implemented in this example, but you could add it similarly to DAC0 and DAC1
-                                    info!("DAC2 read not implemented");
+                                    trace!("DAC2 read not implemented");
                                     usb.report_err("DAC2", "Not implemented").await;
                                 }
                             }
@@ -237,7 +238,7 @@ pub async fn cdc_conf_task(
                             }
                             Dacs::Dac2 => {
                                 // DAC2 is not implemented in this example, but you could add it similarly to DAC0 and DAC1
-                                info!("DAC2 write not implemented");
+                                trace!("DAC2 write not implemented");
                                 usb.report_err("DAC2", "Not implemented").await;
                             }
                         },
@@ -391,7 +392,7 @@ impl AcmDeviceFunctions for CdcAcmDevice {
                 } else if c == '\n' || c == '\r' {
                     // end of command
                     if !msg.is_empty() {
-                        info!("Received command: {}", msg);
+                        trace!("Received command: {}", msg);
                         self.write_message(b"\r\n").await; // extra newline after echo for readability
                         return Some(());
                     } else {
@@ -423,8 +424,8 @@ impl AcmDeviceFunctions for CdcAcmDevice {
         let mut output = heapless::String::<4096>::new();
         match value {
             Ok(v) => {
-                log::info!("{}: {:?}", message, v);
-                info!("{}: {:?}", message, v);
+                log::trace!("{}: {:?}", message, v);
+                trace!("{}: {:?}", message, v);
                 core::write!(&mut output, "OK : {}: {:?}\r\n", message, v).ok();
             }
             Err(e) => {

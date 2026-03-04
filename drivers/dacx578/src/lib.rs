@@ -32,6 +32,13 @@ pub enum Address {
     PinFloat = 0x4c,
 }
 
+impl Address {
+    /// Returns the range of valid I2C addresses for the DACx578 devices.
+    pub const fn address_range() -> [u8; 3] {
+        [0x48, 0x4a, 0x4c]
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "kmdparse", derive(kmdparse::Parsable))]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]

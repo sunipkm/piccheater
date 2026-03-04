@@ -18,8 +18,8 @@ assign_resources! {
     }
     i2csns: I2cSnsDev {
         i2c: I2C1,
-        scl: PIN_3,
-        sda: PIN_2,
+        scl: PIN_7,
+        sda: PIN_6,
     }
     led: LedDev {
         pin: PIN_25,
