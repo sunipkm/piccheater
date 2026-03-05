@@ -1,6 +1,6 @@
 use embedded_hal::i2c::I2c;
 
-use crate::{Channel, Configuration, Register, ResetMode, ValidValue};
+use crate::{details::BCAST_ADDR, Channel, Configuration, Register, ResetMode, ValidValue};
 
 /// Trait to define synchronous functions for the DAC device.
 pub trait SyncFunctions<I2C, E, T>
@@ -9,31 +9,27 @@ where
 {
     /// Read a value from a specific register.
     fn read(&mut self, register: Register) -> Result<Configuration, E>;
+
     /// Write a configuration to a specific register.
     fn configure(&mut self, config: Configuration) -> Result<(), E>;
+
     /// Write a value to a specific channel.
     /// The upper N bits are used depending on the DAC resolution.
     fn write(&mut self, channel: Channel, value: T) -> Result<(), E>;
+
     /// Update a specific channel with a new value.
     /// The upper N bits are used depending on the DAC resolution.
     fn update(&mut self, channel: Channel) -> Result<(), E>;
+
     /// Write and update a specific channel with a new value.
     /// The upper N bits are used depending on the DAC resolution.
     fn write_and_update(&mut self, channel: Channel, value: T) -> Result<(), E>;
+
     /// Write new value to a channel and update all channels (global LDAC).
     fn write_and_update_all(&mut self, channel: Channel, value: T) -> Result<(), E>;
+
     /// Reset the device with the specified reset mode.
     fn reset(&mut self, mode: ResetMode) -> Result<(), E>;
-    /// Wake up all devices on the bus.
-    /// WARNING: This function uses the default I2C address (0x0) and may affect multiple devices.
-    fn wake_up_all(i2c: &mut I2C) -> Result<(), E> {
-        i2c.write(0x0, &[0x6])
-    }
-    /// Reset all devices on the bus.
-    /// WARNING: This function uses the default I2C address (0x0) and may affect multiple devices.
-    fn reset_all(i2c: &mut I2C) -> Result<(), E> {
-        i2c.write(0x0, &[0x9])
-    }
 }
 
 impl<I2C, E, T> SyncFunctions<I2C, E, T> for crate::DacX578<I2C, T>
@@ -77,4 +73,32 @@ where
     fn reset(&mut self, mode: ResetMode) -> Result<(), E> {
         self.i2c.write(self.address, &[0x70, mode as u8, 0x0])
     }
+}
+
+/// Wake up all devices on the bus.
+/// WARNING: This function uses the default I2C address (0x47) and will affect ALL DACx578 devices.
+pub fn wake_up_all_sync<I2C, E>(i2c: &mut I2C) -> Result<(), E>
+where
+    I2C: I2c<Error = E>,
+{
+    i2c.write(BCAST_ADDR, &[0x6])
+}
+/// Reset all devices on the bus.
+/// WARNING: This function uses the default I2C address (0x47) and will affect ALL DACx578 devices.
+pub fn reset_all_sync<I2C, E>(i2c: &mut I2C) -> Result<(), E>
+where
+    I2C: I2c<Error = E>,
+{
+    i2c.write(BCAST_ADDR, &[0x9])
+}
+
+/// Configure all devices on the bus with the specified configuration.
+/// Useful for setting global configurations like power-down mode or LDAC settings.
+/// WARNING: This function uses the default I2C address (0x47) and will affect ALL DACx578 devices.
+pub fn configure_all_sync<I2C, E>(i2c: &mut I2C, config: Configuration) -> Result<(), E>
+where
+    I2C: I2c<Error = E>,
+{
+    let bytes: [u8; 3] = config.into();
+    i2c.write(BCAST_ADDR, &bytes)
 }

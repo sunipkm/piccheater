@@ -1,6 +1,7 @@
 use kmdparse::Parsable;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Parsable)]
+#[repr(u8)]
 pub enum Dacs {
     Dac0 = 0x48,
     Dac1 = 0x4a,

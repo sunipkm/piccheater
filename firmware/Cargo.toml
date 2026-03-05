@@ -56,13 +56,9 @@ crc16 = "0.4"
 dtoa = { version = "1.0" }
 libm = { version = "0.2", default-features = false }
 kmdparse = { workspace = true }
-uom = { workspace = true, features = [
-    "f32",
-    "si",
-    "autoconvert",
-] }
+uom = { workspace = true, features = ["f32", "si", "autoconvert"] }
 
-dacx578 = { workspace = true, features = ["async", "defmt", "uom", "kmdparse"] }
+dacx578 = { workspace = true, features = ["async", "defmt", "kmdparse", "uom"] }
 ina233 = { workspace = true, features = ["async", "defmt"] }
 
 [features]

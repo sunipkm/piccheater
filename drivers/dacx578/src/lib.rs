@@ -13,9 +13,9 @@ mod blocking_impl;
 mod details;
 
 #[cfg(feature = "async")]
-pub use async_impl::AsyncFunctions;
+pub use async_impl::{AsyncFunctions, wake_up_all_async, reset_all_async, configure_all_async};
 #[cfg(feature = "sync")]
-pub use blocking_impl::SyncFunctions;
+pub use blocking_impl::{SyncFunctions, wake_up_all_sync, reset_all_sync, configure_all_sync};
 
 pub use details::ValidValue;
 
@@ -36,6 +36,17 @@ impl Address {
     /// Returns the range of valid I2C addresses for the DACx578 devices.
     pub const fn address_range() -> [u8; 3] {
         [0x48, 0x4a, 0x4c]
+    }
+}
+
+impl From<u8> for Address {
+    fn from(addr: u8) -> Self {
+        match addr {
+            0x48 => Address::PinLow,
+            0x4a => Address::PinHigh,
+            0x4c => Address::PinFloat,
+            _ => panic!("Invalid I2C address for DACx578: {:#02x}", addr),
+        }
     }
 }
 
@@ -95,6 +106,13 @@ pub struct Channels {
     #[allow(non_snake_case)]
     /// DAC output channel H
     pub H: bool,
+}
+
+impl Channels {
+    /// Returns a `Channels` struct with all channels set to true.
+    pub const fn all() -> Self {
+        Self(0xff)
+    }
 }
 
 /// The type of the command to send for a Command
@@ -220,7 +238,6 @@ pub struct DacX578<I2C, T> {
     scale: T,
 }
 
-#[cfg(feature = "uom")]
 impl<I2C, T: ValidValue> DacX578<I2C, T> {
     /// Creates a new instance of the DACx578 driver.
     pub fn new(i2c: I2C, address: Address, scale: T) -> Self {
@@ -229,5 +246,9 @@ impl<I2C, T: ValidValue> DacX578<I2C, T> {
             address: address as u8,
             scale,
         }
+    }
+    /// Converts a `u16` value to the appropriate type `T` based on the scale of the DAC and the provided scale factor
+    pub fn invert(&self, value: u16) -> T {
+        self.scale.invert(value)
     }
 }

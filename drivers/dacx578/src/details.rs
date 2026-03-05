@@ -1,6 +1,5 @@
 #[cfg(feature = "uom")]
-use uom::si::f32::ElectricPotential;
-use uom::si::ratio::ratio;
+use uom::si::{f32::ElectricPotential, ratio::ratio};
 
 use crate::{
     Channel, Channels, ClearCode, CommandType, Configuration, DacX578, PowerDownMode, Register,
@@ -34,6 +33,8 @@ pub trait ValidValue: Copy {
     fn scale(self, scale: Self) -> u16;
     /// Get the zero scale value
     fn zero() -> Self;
+    /// Invert the scaling of the value, converting from a u16 back to the original type
+    fn invert(self, value: u16) -> Self;
 }
 
 impl ValidValue for u16 {
@@ -43,6 +44,10 @@ impl ValidValue for u16 {
 
     fn zero() -> u16 {
         0u16
+    }
+
+    fn invert(self, value: u16) -> Self {
+        value
     }
 }
 
@@ -56,6 +61,10 @@ impl ValidValue for ElectricPotential {
         use uom::ConstZero;
 
         ElectricPotential::ZERO
+    }
+
+    fn invert(self, value: u16) -> Self {
+        (value as f32 / u16::MAX as f32) * self
     }
 }
 
@@ -164,3 +173,5 @@ impl Into<[u8; 3]> for Configuration {
         }
     }
 }
+
+pub(crate) const BCAST_ADDR: u8 = 0b0100_0111;

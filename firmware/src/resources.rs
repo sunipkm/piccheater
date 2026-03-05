@@ -7,8 +7,12 @@ use embassy_rp::{
 use embassy_sync::{blocking_mutex::raw::NoopRawMutex, mutex::Mutex};
 
 assign_resources! {
-    usbdac: UsbDacDev {
+    usb: UsbDev {
         usb: USB,
+        // ldac: PIN_18,
+        // clr: PIN_19,
+    }
+    dac: DacDev {
         i2c: I2C0,
         scl: PIN_9,
         sda: PIN_8,

@@ -1,20 +1,16 @@
 // use core::sync::atomic::{AtomicBool, Ordering};
-use core::fmt::Write;
-use dacx578::{Address, AsyncFunctions as _, DacX578, ResetMode};
+use core::{
+    fmt::Write,
+    sync::atomic::{AtomicBool, Ordering},
+};
 use defmt::*;
-use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_executor::Spawner;
-// use embassy_futures::select::{Either, select};
 use embassy_rp::{
     bind_interrupts,
-    gpio::Output,
-    i2c::{Config as I2cConfig, I2c, InterruptHandler as I2cIrqHandler},
-    peripherals::{I2C0, USB},
+    peripherals::USB,
     usb::{Driver as UsbDriver, InterruptHandler as UsbIrqHandler},
     // watchdog::Watchdog,
 };
-use embassy_sync::mutex::Mutex;
-// use embassy_time::{Duration, Timer};
 use embassy_usb::{
     Builder, Config as UsbConfig, UsbDevice,
     class::cdc_acm::{CdcAcmClass, State as CdcAcmState},
@@ -22,20 +18,13 @@ use embassy_usb::{
 use heapless::String;
 use kmdparse::parse;
 use static_cell::StaticCell;
-use uom::{
-    ConstZero,
-    si::{electric_potential::millivolt, f32::ElectricPotential},
-};
 
 use crate::{
-    MeasurementReceiver,
-    commands::{Commands, Dacs},
-    resources::{StaticI2cBus, UsbDacDev},
+    CommandSender, MeasurementReceiver, ResponseReceiver, commands::Commands, resources::UsbDev,
 };
 
 bind_interrupts!(struct Irqs {
     USBCTRL_IRQ => UsbIrqHandler<USB>;
-    I2C0_IRQ => I2cIrqHandler<I2C0>;
 });
 
 // /// Signal to sensor tasks to shut down
@@ -43,13 +32,16 @@ bind_interrupts!(struct Irqs {
 
 type CdcAcmDevice = CdcAcmClass<'static, UsbDriver<'static, USB>>;
 type UsbDeviceDriver = UsbDevice<'static, UsbDriver<'static, USB>>;
-// type SharedI2cBus = I2cDevice<'static, NoopRawMutex, I2c<'static, I2C0, I2cAsync>>;
-// type StaticInput = Input<'static>;
-type StaticOutput = Output<'static>;
-// type StaticInputRef = &'static mut Input<'static>;
-// type StaticOutputRef = &'static mut Output<'static>;
 
-pub fn usb_task(spawner: &Spawner, dev: UsbDacDev, receiver: MeasurementReceiver) {
+pub static DAC_READY: AtomicBool = AtomicBool::new(false);
+
+pub fn usb_task(
+    spawner: &Spawner,
+    usb: UsbDev,
+    report: MeasurementReceiver,
+    command: CommandSender,
+    response: ResponseReceiver,
+) {
     // Allocate static memory for the USB device and related state
     static USB_DEVICE: StaticCell<UsbDeviceDriver> = StaticCell::new();
     static CDC_CONF_STATE: StaticCell<CdcAcmState> = StaticCell::new();
@@ -62,7 +54,7 @@ pub fn usb_task(spawner: &Spawner, dev: UsbDacDev, receiver: MeasurementReceiver
     static CTRL_BUF: StaticCell<[u8; 64]> = StaticCell::new();
 
     // Create the USB driver and attach interrupts
-    let driver = UsbDriver::new(dev.usb, Irqs);
+    let driver = UsbDriver::new(usb.usb, Irqs);
     trace!("USB driver created");
     // Create the USB device configuration
     let mut config = UsbConfig::new(0xc001, 0xfee1);
@@ -105,19 +97,6 @@ pub fn usb_task(spawner: &Spawner, dev: UsbDacDev, receiver: MeasurementReceiver
     // Store the USB device in a static cell for handoff to the USB task in embassy executor
     let usb_dev = USB_DEVICE.init(usb);
 
-    // Create DAC devices
-    static I2C_BUS: StaticCell<StaticI2cBus<I2C0>> = StaticCell::new();
-    static AMP_EN: StaticCell<StaticOutput> = StaticCell::new();
-
-    // Initialize the shared I2C bus and DAC control pins
-    let i2c_config = I2cConfig::default();
-    let i2c = Mutex::new(I2c::new_async(dev.i2c, dev.scl, dev.sda, Irqs, i2c_config));
-    let amp_en = Output::new(dev.en, embassy_rp::gpio::Level::Low);
-
-    // Store the I2C bus and control pins in static cells for use in the USB task
-    let i2c_bus = I2C_BUS.init(i2c);
-    let amp_en_pin = AMP_EN.init(amp_en);
-
     // Spawn the USB device task and CDC ACM tasks in the embassy executor
     if let Err(e) = spawner.spawn(usb_device_task(usb_dev)) {
         error!("Failed to spawn USB device task: {:?}", e);
@@ -125,13 +104,13 @@ pub fn usb_task(spawner: &Spawner, dev: UsbDacDev, receiver: MeasurementReceiver
     } else {
         trace!("USB device task spawned");
     }
-    if let Err(e) = spawner.spawn(cdc_conf_task(cdc_conf, i2c_bus, amp_en_pin)) {
+    if let Err(e) = spawner.spawn(cdc_conf_task(cdc_conf, command, response)) {
         error!("Failed to spawn CDC config task: {:?}", e);
         log::error!("Failed to spawn CDC config task: {:?}", e);
     } else {
         trace!("CDC configuration input task spawned");
     }
-    if let Err(e) = spawner.spawn(cdc_tlm_task(cdc_tlm, receiver)) {
+    if let Err(e) = spawner.spawn(cdc_tlm_task(cdc_tlm, report)) {
         error!("Failed to spawn CDC telemetry task: {:?}", e);
         log::error!("Failed to spawn CDC telemetry task: {:?}", e);
     } else {
@@ -142,43 +121,9 @@ pub fn usb_task(spawner: &Spawner, dev: UsbDacDev, receiver: MeasurementReceiver
 #[embassy_executor::task]
 pub async fn cdc_conf_task(
     usb: &'static mut CdcAcmDevice,
-    i2c: &'static mut StaticI2cBus<I2C0>,
-    dac_en: &'static mut StaticOutput,
+    sender: CommandSender,
+    receiver: ResponseReceiver,
 ) {
-    {
-        const ADDR_LEN: usize = dacx578::Address::address_range().len();
-        let mut addrs = heapless::Vec::<u8, ADDR_LEN>::new();
-        {
-            let mut i2c = i2c.lock().await;
-            for addr in dacx578::Address::address_range() {
-                i2c.blocking_read(addr, &mut [0; 1])
-                    .is_ok()
-                    .then(|| addrs.push(addr).ok());
-            }
-        }
-        trace!("I2C 0> Found {} devices: {:#02x}", addrs.len(), addrs);
-    }
-    let mut dac0 = DacX578::new(
-        I2cDevice::new(i2c),
-        Address::PinHigh,
-        ElectricPotential::new::<millivolt>(2048.0),
-    );
-    let mut dac1 = DacX578::new(
-        I2cDevice::new(i2c),
-        Address::PinLow,
-        ElectricPotential::new::<millivolt>(2048.0),
-    );
-    if let Err(e) = dac0.reset(ResetMode::Por).await {
-        log::error!("Failed to reset DAC0: {:?}", e);
-        error!("Failed to reset DAC0: {:?}", e);
-        return;
-    }
-    if let Err(e) = dac1.reset(ResetMode::Por).await {
-        log::error!("Failed to reset DAC1: {:?}", e);
-        error!("Failed to reset DAC1: {:?}", e);
-        return;
-    }
-
     let mut data = [0u8; 256];
     let mut msg = String::<256>::new();
 
@@ -194,83 +139,14 @@ pub async fn cdc_conf_task(
             match parse::<(), Commands>(&msg, ()) {
                 Ok(cmd) => {
                     match cmd {
-                        Commands::ReadDac { dac, channel } => {
-                            match dac {
-                                Dacs::Dac0 => {
-                                    let value =
-                                        dac0.read(dacx578::Register::ChannelDac(channel)).await;
-                                    usb.respond("Read from DAC0", value).await;
-                                }
-                                Dacs::Dac1 => {
-                                    let value =
-                                        dac1.read(dacx578::Register::ChannelDac(channel)).await;
-                                    usb.respond("Read from DAC1", value).await;
-                                }
-                                Dacs::Dac2 => {
-                                    // DAC2 is not implemented in this example, but you could add it similarly to DAC0 and DAC1
-                                    trace!("DAC2 read not implemented");
-                                    usb.report_err("DAC2", "Not implemented").await;
-                                }
-                            }
-                        }
-                        Commands::WriteDac {
-                            dac,
-                            channel,
-                            value,
-                        } => match dac {
-                            Dacs::Dac0 => {
-                                let res = dac0
-                                    .write_and_update(
-                                        channel,
-                                        ElectricPotential::new::<millivolt>(value),
-                                    )
-                                    .await;
-                                usb.respond("Write to DAC0", res).await;
-                            }
-                            Dacs::Dac1 => {
-                                let res = dac1
-                                    .write_and_update(
-                                        channel,
-                                        ElectricPotential::new::<millivolt>(value),
-                                    )
-                                    .await;
-                                usb.respond("Write to DAC1", res).await;
-                            }
-                            Dacs::Dac2 => {
-                                // DAC2 is not implemented in this example, but you could add it similarly to DAC0 and DAC1
-                                trace!("DAC2 write not implemented");
-                                usb.report_err("DAC2", "Not implemented").await;
-                            }
-                        },
-                        Commands::EnableOutputs => {
-                            dac_en.set_high();
-                            usb.report_ok("Enable AMP EN pin", ()).await;
-                        }
-                        Commands::DisableOutputs => {
-                            dac_en.set_low();
-                            usb.report_ok("Disable AMP EN pin", ()).await;
-                        }
-                        Commands::AllOff => {
-                            dac_en.set_low();
-                            let r1 = dac0
-                                .write_and_update(dacx578::Channel::All, ElectricPotential::ZERO)
-                                .await
-                                .err();
-                            let r2 = dac1
-                                .write_and_update(dacx578::Channel::All, ElectricPotential::ZERO)
-                                .await
-                                .err();
-                            usb.report_ok("All outputs off", (r1.is_none(), r2.is_none()))
-                                .await;
-                        }
                         Commands::GetReportCadence => {
-                            let cadence = crate::reporter::UPDATE_CADENCE_MS
-                                .load(core::sync::atomic::Ordering::Relaxed);
+                            let cadence =
+                                crate::reporter::UPDATE_CADENCE_MS.load(Ordering::Relaxed);
                             usb.report_ok("Current report cadence (ms)", cadence).await;
                         }
                         Commands::SetReportCadence(new_cadence) => {
                             crate::reporter::UPDATE_CADENCE_MS
-                                .store(new_cadence, core::sync::atomic::Ordering::Relaxed);
+                                .store(new_cadence, Ordering::Relaxed);
                             usb.report_ok("Updated report cadence (ms)", new_cadence)
                                 .await;
                         }
@@ -288,6 +164,16 @@ pub async fn cdc_conf_task(
                             \t<channel> can be a, b, c, d, e, f, g, h, and all\r\n\
                             \t<value> should be a 16-bit decimal value (e.g. 32767)\r\n";
                             usb.write_message(help_message.as_bytes()).await;
+                        }
+                        _ => {
+                            if DAC_READY.load(Ordering::SeqCst) {
+                                usb.report_err("DAC not ready", "Unable to process command at this time, please try again later").await;
+                            } else if sender.try_send(cmd).is_err() {
+                                usb.report_err("Command channel full", "Unable to process command at this time, please try again later").await;
+                            } else {
+                                let (message, value) = receiver.receive().await;
+                                usb.respond(message, value).await;
+                            }
                         }
                     }
                 }
