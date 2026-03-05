@@ -62,8 +62,11 @@ dacx578 = { workspace = true, features = ["async", "defmt", "kmdparse", "uom"] }
 ina233 = { workspace = true, features = ["async", "defmt"] }
 
 [features]
-defmt = []
-default = ["defmt"]
+# defmt = ["dep:defmt"]
+# default = ["defmt"]
+midscale = []
+default = ["midscale"]
+
 
 [build-dependencies]
 crc16 = "0.4"

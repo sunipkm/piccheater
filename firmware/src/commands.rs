@@ -3,16 +3,16 @@ use kmdparse::Parsable;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Parsable)]
 #[repr(u8)]
 pub enum Dacs {
-    Dac0 = 0x48,
-    Dac1 = 0x4a,
-    Dac2 = 0x4c,
+    Dac0 = dacx578::Address::PinHigh as u8,
+    Dac1 = dacx578::Address::PinLow as u8,
+    Dac2 = dacx578::Address::PinFloat as u8,
 }
 
 impl From<Dacs> for dacx578::Address {
     fn from(dac: Dacs) -> Self {
         match dac {
-            Dacs::Dac0 => Self::PinLow,
-            Dacs::Dac1 => Self::PinHigh,
+            Dacs::Dac0 => Self::PinHigh,
+            Dacs::Dac1 => Self::PinLow,
             Dacs::Dac2 => Self::PinFloat,
         }
     }

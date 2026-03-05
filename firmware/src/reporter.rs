@@ -1,6 +1,6 @@
 use core::sync::atomic::AtomicU32;
 
-use defmt::{error, info};
+use defmt::{debug, error, trace};
 use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_executor::Spawner;
 use embassy_rp::{
@@ -37,18 +37,18 @@ pub fn report_spawner(spawner: &Spawner, dev: I2cSnsDev, sender: MeasurementSend
     let i2c_bus = I2C_BUS.init(Mutex::new(I2c::new_async(
         dev.i2c, dev.scl, dev.sda, Irqs, i2c_config,
     )));
-    info!("Spawning I2C report task");
+    trace!("Spawning I2C report task");
     if let Err(e) = spawner.spawn(i2c_report_task(i2c_bus, sender)) {
         log::error!("Failed to spawn I2C report task: {:?}", e);
-        info!("Failed to spawn I2C report task: {:?}", e);
+        trace!("Failed to spawn I2C report task: {:?}", e);
     } else {
-        info!("I2C report task spawned successfully");
+        trace!("I2C report task spawned successfully");
     }
 }
 
 #[embassy_executor::task]
 pub async fn i2c_report_task(i2c_bus: &'static StaticI2cBus<I2C1>, sender: MeasurementSender) {
-    info!("I2C report task started");
+    trace!("I2C report task started");
     let mut ticker = Ticker::every(Duration::from_secs(1));
     let mut addrs = heapless::Vec::<u8, 16>::new();
     let mut sensors = heapless::Vec::<Ina233<_, _>, 16>::new();
@@ -65,13 +65,13 @@ pub async fn i2c_report_task(i2c_bus: &'static StaticI2cBus<I2C1>, sender: Measu
                     .is_ok()
                     .then(|| addrs.push(addr).ok());
             }
-            info!(
-                "Found {} INA233 devices at addresses: {:#02x}",
+            trace!(
+                "[INA233] Found {} devices at addresses: {:?}",
                 addrs.len(),
                 addrs.as_slice(),
             );
-            log::info!(
-                "Found {} INA233 devices at addresses: {:?}",
+            log::trace!(
+                "[INA233] Found {} devices at addresses: {:?}",
                 addrs.len(),
                 addrs.as_slice(),
             );
@@ -90,19 +90,12 @@ pub async fn i2c_report_task(i2c_bus: &'static StaticI2cBus<I2C1>, sender: Measu
             let i2c_bus = I2cDevice::new(i2c_bus);
             match Ina233::new_async(i2c_bus, Delay, config).await {
                 Ok(s) => {
-                    info!("Initialized INA233 at address {:#02x}", addr);
+                    debug!("Initialized INA233 at address {:#02x}", addr);
                     sensors.push(s).ok()
                 }
                 Err(e) => {
-                    log::error!(
-                        "Failed to initialize INA233 at address {:#02x}: {:?}",
-                        addr,
-                        e
-                    );
-                    error!(
-                        "Failed to initialize INA233 at address {:#02x}: {:?}",
-                        addr, e
-                    );
+                    log::error!("[INA233@{:#02x}] Failed to initialize: {:?}", addr, e);
+                    error!("[INA233@{:#02x}] Failed to initialize: {:?}", addr, e);
                     continue 'main;
                 }
             };
@@ -111,8 +104,8 @@ pub async fn i2c_report_task(i2c_bus: &'static StaticI2cBus<I2C1>, sender: Measu
             for sensor in sensors.iter_mut() {
                 match sensor.read().await {
                     Ok((current, voltage)) => {
-                        info!(
-                            "Sensor at {:#02x}: Current = {} A, Voltage = {} V, Power = {} W",
+                        debug!(
+                            "[INA233@{:#02x}] Current = {} A, Voltage = {} V, Power = {} W",
                             sensor.address(),
                             current.get::<ampere>(),
                             voltage.get::<volt>(),
@@ -130,20 +123,20 @@ pub async fn i2c_report_task(i2c_bus: &'static StaticI2cBus<I2C1>, sender: Measu
                             })
                             .is_err()
                         {
-                            error!(
-                                "Failed to send measurement from sensor at {:#02x}: Channel full",
+                            trace!(
+                                "[INA233@{:#02x}] Failed to send measurement: Channel full",
                                 sensor.address()
                             );
                         }
                     }
                     Err(e) => {
                         log::error!(
-                            "Failed to read from sensor at {:#02x}: {:?}",
+                            "[INA233@{:#02x}] Failed to read from sensor: {:?}",
                             sensor.address(),
                             e
                         );
                         error!(
-                            "Failed to read from sensor at {:#02x}: {:?}",
+                            "[INA233@{:#02x}] Failed to read from sensor: {:?}",
                             sensor.address(),
                             e
                         );

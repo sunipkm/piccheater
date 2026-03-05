@@ -125,8 +125,7 @@ where
         configuration: Configuration,
     ) -> Result<Self, Error<I2C::Error>> {
         let mut delay = delay;
-        let base_address = 0x40;
-        let address = base_address | (configuration.a1 as u8) << 2 | (configuration.a0 as u8);
+        let address = u8::from(&configuration);
         #[cfg(feature = "defmt")]
         {
             defmt::trace!("[INA233] Initializing at address {:#02x}", address);

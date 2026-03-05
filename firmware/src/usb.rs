@@ -166,7 +166,7 @@ pub async fn cdc_conf_task(
                             usb.write_message(help_message.as_bytes()).await;
                         }
                         _ => {
-                            if DAC_READY.load(Ordering::SeqCst) {
+                            if !DAC_READY.load(Ordering::SeqCst) {
                                 usb.report_err("DAC not ready", "Unable to process command at this time, please try again later").await;
                             } else if sender.try_send(cmd).is_err() {
                                 usb.report_err("Command channel full", "Unable to process command at this time, please try again later").await;

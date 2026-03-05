@@ -5,6 +5,22 @@ use uom::si::{
     f32::{ElectricCurrent, ElectricPotential},
 };
 
+use crate::{Configuration, ConfigurationBuilder};
+
+pub(crate) const BASE_ADDRESS: u8 = 0x40;
+
+impl From<&Configuration> for u8 {
+    fn from(config: &Configuration) -> Self {
+        BASE_ADDRESS | ((config.a1 as u8) << 2) | (config.a0 as u8)
+    }
+}
+
+impl From<&ConfigurationBuilder> for u8 {
+    fn from(config: &ConfigurationBuilder) -> Self {
+        BASE_ADDRESS | ((config.a1 as u8) << 2) | (config.a0 as u8)
+    }
+}
+
 pub(crate) trait ConvertRaw<const N: usize> {
     fn from_raw(raw: [u8; N]) -> Self
     where

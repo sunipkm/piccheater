@@ -62,10 +62,10 @@ async fn main(spawner: Spawner) {
             }
         })
     });
-    info!("Core 1 started and tasks spawned");
+    trace!("Core 1 started and tasks spawned");
     // Spawn the USB task on the main core
     usb_task(&spawner, resources.usb, rpt_receiver, cmd_sender, resp_receiver);
-    info!("USB task spawned on main core");
+    trace!("USB task spawned on main core");
 
     // Spawn the DAC control task, which will handle commands from the USB configuration interface and control the DAC outputs accordingly
     if let Err(e) = spawner.spawn(dac_task(resources.dac, cmd_receiver, resp_sender)) {

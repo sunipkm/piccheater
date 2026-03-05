@@ -4,7 +4,7 @@ use dacx578::{
     Address, AsyncFunctions as _, Channels, ClearCode, Configuration, DacX578, PowerDownMode,
     ResetMode, configure_all_async,
 };
-use defmt::{error, trace};
+use defmt::{debug, error, trace};
 use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_rp::{
     bind_interrupts,
@@ -49,7 +49,9 @@ pub async fn dac_task(dac: DacDev, receiver: CommandReceiver, sender: ResponseSe
                         .then(|| addrs.push(addr).ok());
                 }
             }
+            ticker.next().await;
         }
+        debug!("DACs found at addresses: {:#02x}", addrs);
         // Initialize devices
         let mut dacs = heapless::LinearMap::<u8, DacX578<_, _>, ADDR_LEN>::new();
 
@@ -64,6 +66,7 @@ pub async fn dac_task(dac: DacDev, receiver: CommandReceiver, sender: ResponseSe
                 error!("Failed to reset DAC at address {:#02x}: {:?}", addr, e);
                 continue 'main;
             } else {
+                debug!("DAC at address {:#02x} reset successfully", addr);
                 dacs.insert(*addr, dac).ok();
             }
         }
@@ -75,6 +78,19 @@ pub async fn dac_task(dac: DacDev, receiver: CommandReceiver, sender: ResponseSe
             {
                 error!("Failed to set DAC clear code: {:?}", e);
                 log::error!("Failed to set DAC clear code: {:?}", e);
+            }
+            #[cfg(feature = "midscale")]
+            {
+                for dac in dacs.values_mut() {
+                    use dacx578::Channel;
+                    dac.write_and_update(Channel::All, ElectricPotential::new::<millivolt>(1000.0))
+                        .await
+                        .inspect_err(|e| {
+                            error!("Failed to set DAC to mid-scale: {:?}", e);
+                            log::error!("Failed to set DAC to mid-scale: {:?}", e);
+                        })
+                        .ok();
+                }
             }
             if let Err(e) = configure_all_async(
                 &mut i2c,
@@ -90,6 +106,10 @@ pub async fn dac_task(dac: DacDev, receiver: CommandReceiver, sender: ResponseSe
             }
         }
         DAC_READY.store(true, Ordering::SeqCst);
+        trace!(
+            "DACs initialized and ready for commands: {}",
+            DAC_READY.load(Ordering::SeqCst)
+        );
         // Clear all commands up to this point
         receiver.clear();
         #[allow(irrefutable_let_patterns)]
@@ -167,6 +187,22 @@ pub async fn dac_task(dac: DacDev, receiver: CommandReceiver, sender: ResponseSe
                     )
                 }
                 Commands::DisableOutputs | Commands::AllOff => {
+                    #[cfg(feature = "midscale")]
+                    {
+                        for dac in dacs.values_mut() {
+                            use dacx578::Channel;
+                            dac.write_and_update(
+                                Channel::All,
+                                ElectricPotential::new::<millivolt>(1000.0),
+                            )
+                            .await
+                            .inspect_err(|e| {
+                                error!("Failed to set DAC to mid-scale: {:?}", e);
+                                log::error!("Failed to set DAC to mid-scale: {:?}", e);
+                            })
+                            .ok();
+                        }
+                    }
                     let mut i2c = I2cDevice::new(&i2c);
                     if let Err(e) = configure_all_async(
                         &mut i2c,

@@ -12,10 +12,10 @@ use crate::{AddrPin, registers::AdcConfig};
 #[derive(Default)]
 /// Builder for INA233 driver configuration
 pub struct ConfigurationBuilder {
-    a0: AddrPin,
-    a1: AddrPin,
-    adc_conf: AdcConfig,
-    lsb: Option<ElectricCurrent>,
+    pub(crate) a0: AddrPin,
+    pub(crate) a1: AddrPin,
+    pub(crate) adc_conf: AdcConfig,
+    pub(crate) lsb: Option<ElectricCurrent>,
 }
 
 /// INA233 driver configuration
@@ -125,8 +125,9 @@ impl ConfigurationBuilder {
         {
             use uom::si::{electric_current::microampere, electrical_resistance::milliohm};
 
-            defmt::info!(
-                "[INA233] Calculated calibration value: {} (LSB: {} uA, Shunt: {} Ω)",
+            defmt::debug!(
+                "[INA233@{:#02x}] Calculated calibration value: {} (LSB: {} uA, Shunt: {} Ω)",
+                u8::from(&self),
                 calibration,
                 lsb.get::<microampere>(),
                 shunt_resistance.get::<milliohm>()
