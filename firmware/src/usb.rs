@@ -154,12 +154,12 @@ pub async fn cdc_conf_task(
                             let help_message = "Available commands:\r\n\
                             \t- read-dac <dac> <channel>: Read the value from the specified DAC and channel\r\n\
                             \t- write-dac <dac> <channel> <value>: Write the specified value to the specified DAC and channel.\r\n\
-                            \t\tValue is an unsigned integer in millivolts.
+                            \t\tValue is an unsigned integer in millivolts.\r\n\
                             \t- enable-outputs: Enable the DAC outputs\r\n\
                             \t- disable-outputs: Disable the DAC outputs\r\n\
                             \t- all-off: Disable outputs and set all DAC channels to 0\r\n\
-                            \t- help: Show this help message\r\n\
-                            Note: \r\n
+                            \t- help: relm-async-componenthow this help message\r\n\
+                            Note: \r\n\
                             \t<dac> can be dac0, dac1, or dac2 (dac2 is not implemented)\r\n\
                             \t<channel> can be a, b, c, d, e, f, g, h, and all\r\n\
                             \t<value> should be a 16-bit decimal value (e.g. 32767)\r\n";
@@ -203,11 +203,12 @@ pub async fn cdc_tlm_task(usb: &'static mut CdcAcmDevice, receiver: MeasurementR
             let mut output = String::<256>::new();
             core::write!(
                 &mut output,
-                "{},{},{},{}\r\n",
+                "{},{},{},{},{}\r\n",
                 measurement.source,
                 measurement.voltage,
                 measurement.current,
-                measurement.power
+                measurement.power,
+                measurement.shunt,
             )
             .ok();
             if let Err(e) = usb.write_packet(output.as_bytes()).await {

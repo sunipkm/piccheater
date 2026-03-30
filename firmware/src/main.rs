@@ -88,10 +88,16 @@ async fn led_task(led: LedDev) {
 }
 
 pub struct Measurement {
+    /// I2C address of the sensor
     pub source: u8,
+    /// Voltage in millivolts
     pub voltage: u32,
+    /// Current in milliamps, can be negative
     pub current: i32,
+    /// Power in milliwatts
     pub power: u32,
+    /// Shunt voltage in microvolts, can be negative
+    pub shunt: i32,
 }
 
 pub type MeasurementChannel = Channel<CriticalSectionRawMutex, Measurement, 8>;

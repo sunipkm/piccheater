@@ -10,11 +10,11 @@ use embassy_rp::{
 };
 use embassy_sync::mutex::Mutex;
 use embassy_time::{Delay, Duration, Ticker};
-use ina233::{AdcConfig, AsyncInterface as _, ConfigurationBuilder, Ina233};
+use ina233::{AdcConfig, AsyncInterface, ConfigurationBuilder, Ina233};
 use static_cell::StaticCell;
 use uom::si::{
     electric_current::{ampere, microampere, milliampere},
-    electric_potential::{millivolt, volt},
+    electric_potential::{microvolt, millivolt, volt},
     electrical_resistance::milliohm,
     f32::{ElectricCurrent, ElectricalResistance},
     power::{milliwatt, watt},
@@ -104,22 +104,26 @@ pub async fn i2c_report_task(i2c_bus: &'static StaticI2cBus<I2C1>, sender: Measu
             for sensor in sensors.iter_mut() {
                 match sensor.read().await {
                     Ok((current, voltage)) => {
+                        let shunt = sensor.read_shunt().await.ok();
                         debug!(
-                            "[INA233@{:#02x}] Current = {} A, Voltage = {} V, Power = {} W",
+                            "[INA233@{:#02x}] Current = {} A, Voltage = {} V, Power = {} W, Shunt = {} uV",
                             sensor.address(),
                             current.get::<ampere>(),
                             voltage.get::<volt>(),
-                            (current * voltage).get::<watt>()
+                            (current * voltage).get::<watt>(),
+                            shunt.map(|v| v.get::<microvolt>()).unwrap_or(-f32::NAN),
                         );
                         let power = (current.abs() * voltage).get::<milliwatt>() as u32;
                         let current = current.get::<milliampere>() as i32;
                         let voltage = voltage.get::<millivolt>() as u32;
+                        let shunt = shunt.map(|v| v.get::<microvolt>() as i32).unwrap_or(0);
                         if sender
                             .try_send(Measurement {
                                 source: sensor.address(),
                                 voltage,
                                 current,
                                 power,
+                                shunt,
                             })
                             .is_err()
                         {
