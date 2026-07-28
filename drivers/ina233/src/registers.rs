@@ -223,6 +223,7 @@ impl Averages {
 
 impl_register!(AdcConfig, 0xd0, u16, 2);
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct LoadVoltage(pub(crate) i16);
 
 impl From<i16> for LoadVoltage {
@@ -239,6 +240,7 @@ impl From<LoadVoltage> for ElectricPotential {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct ShuntVoltage(pub(crate) i16);
 
 impl From<i16> for ShuntVoltage {
@@ -256,6 +258,7 @@ impl From<ShuntVoltage> for ElectricPotential {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]    
 pub(crate) struct LoadCurrent(pub(crate) i16);
 
 impl From<i16> for LoadCurrent {
@@ -272,6 +275,7 @@ impl LoadCurrent {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct LoadPower(pub(crate) u16);
 
 impl From<u16> for LoadPower {

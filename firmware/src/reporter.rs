@@ -38,11 +38,15 @@ pub fn report_spawner(spawner: &Spawner, dev: I2cSnsDev, sender: MeasurementSend
         dev.i2c, dev.scl, dev.sda, Irqs, i2c_config,
     )));
     trace!("Spawning I2C report task");
-    if let Err(e) = spawner.spawn(i2c_report_task(i2c_bus, sender)) {
-        log::error!("Failed to spawn I2C report task: {:?}", e);
-        trace!("Failed to spawn I2C report task: {:?}", e);
-    } else {
-        trace!("I2C report task spawned successfully");
+    match i2c_report_task(i2c_bus, sender) {
+        Ok(t) => {
+            spawner.spawn(t);
+            trace!("I2C report task spawned successfully");
+        }
+        Err(e) => {
+            log::error!("Failed to initialize I2C report task: {:?}", e);
+            error!("Failed to initialize I2C report task: {:?}", e);
+        }
     }
 }
 

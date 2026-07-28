@@ -4,10 +4,10 @@ version = "0.0.1"
 edition = "2024"
 
 [dependencies]
-embassy-embedded-hal = { version = "0.5", features = ["defmt"] }
-embassy-sync = { version = "0.7", features = ["defmt"] }
-embassy-executor = { version = "0.9", features = [
-    "arch-cortex-m",
+embassy-embedded-hal = { version = "0.6", features = ["defmt"] }
+embassy-sync = { version = "0.8", features = ["defmt"] }
+embassy-executor = { version = "0.10", features = [
+    "platform-cortex-m",
     "executor-thread",
     "executor-interrupt",
     "defmt",
@@ -16,18 +16,16 @@ embassy-time = { version = "0.5", features = [
     "defmt",
     "defmt-timestamp-uptime",
 ] }
-embassy-rp = { version = "0.9", features = [
+embassy-rp = { version = "0.10", features = [
     "defmt",
     "unstable-pac",
     "time-driver",
     "critical-section-impl",
     "rp235xa",
 ] }
-embassy-usb = { version = "0.5" }
+embassy-usb = { version = "0.6" }
 embassy-futures = { version = "0.1" }
-embassy-usb-logger = { version = "0.5" }
-cyw43 = { version = "0.6" }
-cyw43-pio = { version = "0.9" }
+embassy-usb-logger = { version = "0.6" }
 
 defmt = "1.0"
 defmt-rtt = "1.1"
@@ -39,7 +37,7 @@ critical-section = "1.1"
 panic-probe = { version = "1.0", features = ["print-defmt"] }
 byte-slice-cast = { version = "1.2.0", default-features = false }
 heapless = { version = "0.9", features = ["defmt"] }
-usbd-hid = "0.9"
+usbd-hid = "0.10"
 rand_core = "0.10"
 embedded-hal-1 = { package = "embedded-hal", version = "1.0" }
 embedded-hal-async = "1.0"
@@ -49,7 +47,7 @@ embedded-storage = { version = "0.3" }
 static_cell = "2.1"
 portable-atomic = { version = "1.11", features = ["critical-section"] }
 log = "0.4"
-rand = { version = "0.9", default-features = false }
+rand = { version = "0.10", default-features = false }
 embedded-sdmmc = "0.9"
 assign-resources = { git = "https://github.com/adamgreig/assign-resources", rev = "bd22cb7a92031fb16f74a5da42469d466c33383e" }
 crc16 = "0.4"
@@ -57,6 +55,8 @@ dtoa = { version = "1.0" }
 libm = { version = "0.2", default-features = false }
 kmdparse = { workspace = true }
 uom = { workspace = true, features = ["f32", "si", "autoconvert"] }
+embassy-defmt-usb = { version = "0.0.2", features = ["global-logger"] }
+rp-usb-reset = { version = "0.0.1" }
 
 dacx578 = { workspace = true, features = ["async", "defmt", "kmdparse", "uom"] }
 ina233 = { workspace = true, features = ["async", "defmt"] }

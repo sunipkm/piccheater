@@ -13,9 +13,9 @@ mod blocking_impl;
 mod details;
 
 #[cfg(feature = "async")]
-pub use async_impl::{AsyncFunctions, wake_up_all_async, reset_all_async, configure_all_async};
+pub use async_impl::{configure_all_async, reset_all_async, wake_up_all_async, AsyncFunctions};
 #[cfg(feature = "sync")]
-pub use blocking_impl::{SyncFunctions, wake_up_all_sync, reset_all_sync, configure_all_sync};
+pub use blocking_impl::{configure_all_sync, reset_all_sync, wake_up_all_sync, SyncFunctions};
 
 pub use details::ValidValue;
 

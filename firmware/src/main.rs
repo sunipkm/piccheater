@@ -18,13 +18,17 @@ use static_cell::StaticCell;
 use {defmt_rtt as _, panic_probe as _};
 
 mod commands;
+mod dac;
 mod reporter;
 mod resources;
 mod usb;
-mod dac;
 
 use crate::{
-    commands::Commands, dac::dac_task, reporter::report_spawner, resources::{AssignedResources, DacDev, I2cSnsDev, LedDev, UsbDev}, usb::usb_task
+    commands::Commands,
+    dac::dac_task,
+    reporter::report_spawner,
+    resources::{AssignedResources, DacDev, I2cSnsDev, LedDev, UsbDev},
+    usb::usb_task,
 };
 
 #[embassy_executor::main]
@@ -43,6 +47,19 @@ async fn main(spawner: Spawner) {
     let resp_channel = RESP_CHANNEL.init(Channel::new());
     let (cmd_sender, cmd_receiver) = (cmd_channel.sender(), cmd_channel.receiver());
     let (resp_sender, resp_receiver) = (resp_channel.sender(), resp_channel.receiver());
+
+    // Spawn the USB task on the main core
+    usb_task(
+        &spawner,
+        resources.usb,
+        rpt_receiver,
+        cmd_sender,
+        resp_receiver,
+    );
+    trace!("USB task spawned on main core");
+
+    Timer::after_secs(2).await; // Wait for the USB task to initialize and enumerate
+
     // Set up stack and executor for core 1
     const STACK_SIZE: usize = 128 * 1024; // 128 KB stack for core 1
     static CORE1_STACK: StaticCell<Stack<STACK_SIZE>> = StaticCell::new();
@@ -54,25 +71,32 @@ async fn main(spawner: Spawner) {
         exec.run({
             move |spawner| {
                 // Spawn the LED task
-                if let Err(e) = spawner.spawn(led_task(resources.led)) {
-                    log::error!("Failed to spawn LED task: {:?}", e);
-                    error!("Failed to spawn LED task: {:?}", e);
+                match led_task(resources.led) {
+                    Ok(t) => {
+                        spawner.spawn(t);
+                        trace!("LED task spawned");
+                    }
+                    Err(e) => {
+                        log::error!("Failed to spawn LED task: {:?}", e);
+                        error!("Failed to spawn LED task: {:?}", e);
+                    }
                 }
                 report_spawner(&spawner, resources.i2csns, rpt_sender);
             }
         })
     });
     trace!("Core 1 started and tasks spawned");
-    // Spawn the USB task on the main core
-    usb_task(&spawner, resources.usb, rpt_receiver, cmd_sender, resp_receiver);
-    trace!("USB task spawned on main core");
 
     // Spawn the DAC control task, which will handle commands from the USB configuration interface and control the DAC outputs accordingly
-    if let Err(e) = spawner.spawn(dac_task(resources.dac, cmd_receiver, resp_sender)) {
-        error!("Failed to spawn DAC control task: {:?}", e);
-        log::error!("Failed to spawn DAC control task: {:?}", e);
-    } else {
-        trace!("DAC control task spawned");
+    match dac_task(resources.dac, cmd_receiver, resp_sender) {
+        Ok(t) => {
+            spawner.spawn(t);
+            trace!("DAC control task spawned");
+        }
+        Err(e) => {
+            error!("Failed to spawn DAC control task: {:?}", e);
+            log::error!("Failed to spawn DAC control task: {:?}", e);
+        }
     }
 }
 

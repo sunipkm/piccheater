@@ -265,8 +265,8 @@ where
         {
             defmt::trace!(
                 "INA233: Raw Current: {:?}, Raw Voltage: {:?}",
-                current_raw,
-                voltage_raw
+                defmt::Debug2Format(&current_raw),
+                defmt::Debug2Format(&voltage_raw),
             );
         }
         let current = current_raw.into_current(self.lsb);
@@ -278,7 +278,7 @@ where
         let power_raw = LoadPower::read_register(&mut self.i2c).await?;
         #[cfg(feature = "defmt")]
         {
-            defmt::trace!("INA233: Raw Power: {:?}", power_raw);
+            defmt::trace!("INA233: Raw Power: {:?}", defmt::Debug2Format(&power_raw));
         }
         let power = ElectricPotential::from(power_raw) * self.lsb; // Power LSB = Current LSB * 25
         Ok(power)
@@ -288,7 +288,7 @@ where
         let shunt_raw = ShuntVoltage::read_register(&mut self.i2c).await?;
         #[cfg(feature = "defmt")]
         {
-            defmt::trace!("INA233: Raw Shunt Voltage: {:?}", shunt_raw);
+            defmt::trace!("INA233: Raw Shunt Voltage: {:?}", defmt::Debug2Format(&shunt_raw));
         }
         let shunt_voltage = ElectricPotential::from(shunt_raw); // LSB = 2.5 uV
         Ok(shunt_voltage)

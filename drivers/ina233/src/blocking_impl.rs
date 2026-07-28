@@ -15,7 +15,7 @@ use crate::{
 pub(crate) trait SyncRegister<I2C, T, const N: usize>
 where
     I2C: i2c::I2c,
-    Self: Register<T> + ConvertRaw<N> + Sized,
+    Self: Register<T> + ConvertRaw<N> + Sized + core::fmt::Debug,
 {
     fn read_register(iface: &mut I2cInterface<I2C>) -> Result<Self, I2C::Error> {
         #[cfg(feature = "defmt")]
@@ -44,7 +44,7 @@ where
             defmt::trace!(
                 "INA233: Writing register 0x{:02X}: {:?}",
                 Self::ADDRESS,
-                self
+                defmt::Debug2Format(&self),
             );
         }
         iface.i2c.transaction(
@@ -57,7 +57,10 @@ where
         #[cfg(feature = "defmt")]
         {
             defmt::trace!("INA233: Wrote register 0x{:02X}", Self::ADDRESS);
-            defmt::trace!("INA233: Data: {:?}", Self::read_register(iface)?);
+            defmt::trace!(
+                "INA233: Data: {:?}",
+                defmt::Debug2Format(&(Self::read_register(iface))?)
+            );
         }
         Ok(())
     }
@@ -259,8 +262,8 @@ where
         {
             defmt::trace!(
                 "INA233: Raw Current: {:?}, Raw Voltage: {:?}",
-                current_raw,
-                voltage_raw
+                defmt::Debug2Format(&current_raw),
+                defmt::Debug2Format(&voltage_raw)
             );
         }
         let current = current_raw.into_current(self.lsb);
@@ -272,7 +275,7 @@ where
         let power_raw = LoadPower::read_register(&mut self.i2c)?;
         #[cfg(feature = "defmt")]
         {
-            defmt::trace!("INA233: Raw Power: {:?}", power_raw);
+            defmt::trace!("INA233: Raw Power: {:?}", defmt::Debug2Format(&power_raw));
         }
         let power = ElectricPotential::from(power_raw) * self.lsb; // Power LSB = Current LSB * 25
         Ok(power)
@@ -282,7 +285,7 @@ where
         let shunt_raw = ShuntVoltage::read_register(&mut self.i2c)?;
         #[cfg(feature = "defmt")]
         {
-            defmt::trace!("INA233: Raw Shunt Voltage: {:?}", shunt_raw);
+            defmt::trace!("INA233: Raw Shunt Voltage: {:?}", defmt::Debug2Format(&shunt_raw));
         }
         let shunt_voltage = ElectricPotential::from(shunt_raw); // LSB = 2.5 uV
         Ok(shunt_voltage)

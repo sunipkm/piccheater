@@ -12,7 +12,7 @@ use embassy_rp::{
     // watchdog::Watchdog,
 };
 use embassy_usb::{
-    Builder, Config as UsbConfig, UsbDevice,
+    Config as UsbConfig, UsbDevice,
     class::cdc_acm::{CdcAcmClass, State as CdcAcmState},
 };
 use heapless::String;
@@ -43,19 +43,16 @@ pub fn usb_task(
     response: ResponseReceiver,
 ) {
     // Allocate static memory for the USB device and related state
-    static USB_DEVICE: StaticCell<UsbDeviceDriver> = StaticCell::new();
     static CDC_CONF_STATE: StaticCell<CdcAcmState> = StaticCell::new();
     static CDC_TLM_STATE: StaticCell<CdcAcmState> = StaticCell::new();
     static CDC_LOG_STATE: StaticCell<CdcAcmState> = StaticCell::new();
     static CDC_DEVICE: StaticCell<CdcAcmDevice> = StaticCell::new();
     static TLM_DEVICE: StaticCell<CdcAcmDevice> = StaticCell::new();
-    static CONF_DESC: StaticCell<[u8; 256]> = StaticCell::new();
-    static BOS_DESC: StaticCell<[u8; 256]> = StaticCell::new();
-    static CTRL_BUF: StaticCell<[u8; 64]> = StaticCell::new();
 
     // Create the USB driver and attach interrupts
     let driver = UsbDriver::new(usb.usb, Irqs);
     trace!("USB driver created");
+    // static CONFIG: StaticCell<UsbConfig> = StaticCell::new();
     // Create the USB device configuration
     let mut config = UsbConfig::new(0xc001, 0xfee1);
     config.manufacturer = Some("LoCSST/PIC-D");
@@ -65,19 +62,13 @@ pub fn usb_task(
     config.max_packet_size_0 = 64;
     trace!("USB configuration created");
 
-    // Allocate static buffers for USB descriptors and control transfers
-    let conf_desc = CONF_DESC.init([0; 256]);
-    let bos_desc = BOS_DESC.init([0; 256]);
-    let ctrl_buf = CTRL_BUF.init([0; 64]);
-
     // Initialize the CDC ACM class state for both interfaces
     let state_conf = CDC_CONF_STATE.init(CdcAcmState::new());
     let state_tlm = CDC_TLM_STATE.init(CdcAcmState::new());
     let state_log = CDC_LOG_STATE.init(CdcAcmState::new());
 
     // USB builder to construct the device with the specified configuration and classes
-    let mut usb_builder = Builder::new(driver, config, conf_desc, bos_desc, &mut [], ctrl_buf);
-    trace!("USB builder created");
+    let mut usb_builder = rp_usb_reset::build_usb_builder!(driver, config);
 
     // Initialize the CDC ACM classes for both the configuration and telemetry interfaces
     let cdc_conf = CDC_DEVICE.init(CdcAcmClass::new(&mut usb_builder, state_conf, 64));
@@ -85,36 +76,47 @@ pub fn usb_task(
 
     // Set up USB logging
     let cdc_log = CdcAcmClass::new(&mut usb_builder, state_log, 64);
-    if let Err(e) = spawner.spawn(cdc_log_task(cdc_log)) {
-        error!("Failed to spawn CDC log task: {:?}", e);
-    } else {
-        trace!("CDC log task spawned");
+    match cdc_log_task(cdc_log) {
+        Ok(_) => trace!("CDC log task initialized"),
+        Err(e) => {
+            error!("Failed to initialize CDC log task: {:?}", e);
+            log::error!("Failed to initialize CDC log task: {:?}", e);
+        }
     }
 
     // Build the USB device
-    let usb: UsbDevice<'_, UsbDriver<'_, USB>> = usb_builder.build();
-
-    // Store the USB device in a static cell for handoff to the USB task in embassy executor
-    let usb_dev = USB_DEVICE.init(usb);
+    let usb = usb_builder.build();
 
     // Spawn the USB device task and CDC ACM tasks in the embassy executor
-    if let Err(e) = spawner.spawn(usb_device_task(usb_dev)) {
-        error!("Failed to spawn USB device task: {:?}", e);
-        log::error!("Failed to spawn USB device task: {:?}", e);
-    } else {
-        trace!("USB device task spawned");
+    match usb_device_task(usb) {
+        Ok(t) => {
+            spawner.spawn(t);
+            trace!("USB device task spawned")
+        }
+        Err(e) => {
+            error!("Failed to spawn USB device task: {:?}", e);
+            log::error!("Failed to spawn USB device task: {:?}", e);
+        }
     }
-    if let Err(e) = spawner.spawn(cdc_conf_task(cdc_conf, command, response)) {
-        error!("Failed to spawn CDC config task: {:?}", e);
-        log::error!("Failed to spawn CDC config task: {:?}", e);
-    } else {
-        trace!("CDC configuration input task spawned");
+    match cdc_conf_task(cdc_conf, command, response) {
+        Ok(t) => {
+            spawner.spawn(t);
+            trace!("CDC configuration input task spawned")
+        }
+        Err(e) => {
+            error!("Failed to spawn CDC config task: {:?}", e);
+            log::error!("Failed to spawn CDC config task: {:?}", e);
+        }
     }
-    if let Err(e) = spawner.spawn(cdc_tlm_task(cdc_tlm, report)) {
-        error!("Failed to spawn CDC telemetry task: {:?}", e);
-        log::error!("Failed to spawn CDC telemetry task: {:?}", e);
-    } else {
-        trace!("CDC telemetry task spawned");
+    match cdc_tlm_task(cdc_tlm, report) {
+        Ok(t) => {
+            spawner.spawn(t);
+            trace!("CDC telemetry task spawned")
+        }
+        Err(e) => {
+            error!("Failed to spawn CDC telemetry task: {:?}", e);
+            log::error!("Failed to spawn CDC telemetry task: {:?}", e);
+        }
     }
 }
 
@@ -225,7 +227,8 @@ pub async fn cdc_tlm_task(usb: &'static mut CdcAcmDevice, receiver: MeasurementR
 }
 
 #[embassy_executor::task]
-pub async fn usb_device_task(dev: &'static mut UsbDeviceDriver) {
+pub async fn usb_device_task(dev: UsbDeviceDriver) {
+    let mut dev = dev;
     dev.run().await;
 }
 
