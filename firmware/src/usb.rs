@@ -77,7 +77,10 @@ pub fn usb_task(
     // Set up USB logging
     let cdc_log = CdcAcmClass::new(&mut usb_builder, state_log, 64);
     match cdc_log_task(cdc_log) {
-        Ok(_) => trace!("CDC log task initialized"),
+        Ok(t) => {
+            spawner.spawn(t);
+            trace!("CDC log task initialized")
+        }
         Err(e) => {
             error!("Failed to initialize CDC log task: {:?}", e);
             log::error!("Failed to initialize CDC log task: {:?}", e);
