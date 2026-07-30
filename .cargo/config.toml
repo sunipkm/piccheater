@@ -21,3 +21,5 @@ rustflags = [
 [env]
 DEFMT_LOG = "debug"
 EMBASSY_USB_MAX_INTERFACE_COUNT = "10" # 0 -> Picoboot interface, 2 -> Configuration interface, 4 -> Report interface, 6 -> Logger interface, 8 -> CDC Defmt interface
+EMBASSY_USB_MAX_HANDLER_COUNT = "6" # 1 reset, 3 CDC, 1 logger
+RP_USB_RESET_CONFIG_DESCRIPTOR_LEN = "512" # 1024 bytes for the configuration descriptor, which is the maximum allowed by the USB spec

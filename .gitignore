@@ -10,3 +10,4 @@
 .DS_Store
 # KiCad lock files
 **/~*.lck
+*.log

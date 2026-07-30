@@ -56,8 +56,8 @@ libm = { version = "0.2", default-features = false }
 kmdparse = { workspace = true }
 uom = { workspace = true, features = ["f32", "si", "autoconvert"] }
 embassy-defmt-usb = { version = "0.0.2", features = ["global-logger"] }
-rp-usb-reset = { version = "0.0.1" }
-
+# rp-usb-reset = { path = "../../../rust/rp-usb-reset", features = ["rp235xa"] }
+rp-usb-reset = { version = "0.0.2" }
 dacx578 = { workspace = true, features = ["async", "defmt", "kmdparse", "uom"] }
 ina233 = { workspace = true, features = ["async", "defmt"] }
 

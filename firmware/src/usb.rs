@@ -54,7 +54,7 @@ pub fn usb_task(
     trace!("USB driver created");
     // static CONFIG: StaticCell<UsbConfig> = StaticCell::new();
     // Create the USB device configuration
-    let mut config = UsbConfig::new(0xc001, 0xfee1);
+    let mut config = UsbConfig::new(0xc0de, 0xfee1);
     config.manufacturer = Some("LoCSST/PIC-D");
     config.product = Some("PIC-D Heater DAC Rev.0");
     config.serial_number = Some("2026-0001");
