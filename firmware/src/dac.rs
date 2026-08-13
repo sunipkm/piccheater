@@ -48,8 +48,8 @@ pub async fn dac_task(dac: DacDev, receiver: CommandReceiver, sender: ResponseSe
                         .is_ok()
                         .then(|| addrs.push(addr).ok());
                 }
+                ticker.next().await;
             }
-            ticker.next().await;
         }
         debug!("DACs found at addresses: {:#02x}", addrs);
         // Initialize devices

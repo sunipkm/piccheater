@@ -45,7 +45,6 @@ pub fn usb_task(
     // Allocate static memory for the USB device and related state
     static CDC_CONF_STATE: StaticCell<CdcAcmState> = StaticCell::new();
     static CDC_TLM_STATE: StaticCell<CdcAcmState> = StaticCell::new();
-    static CDC_LOG_STATE: StaticCell<CdcAcmState> = StaticCell::new();
     static CDC_DEVICE: StaticCell<CdcAcmDevice> = StaticCell::new();
     static TLM_DEVICE: StaticCell<CdcAcmDevice> = StaticCell::new();
 
@@ -65,7 +64,6 @@ pub fn usb_task(
     // Initialize the CDC ACM class state for both interfaces
     let state_conf = CDC_CONF_STATE.init(CdcAcmState::new());
     let state_tlm = CDC_TLM_STATE.init(CdcAcmState::new());
-    let state_log = CDC_LOG_STATE.init(CdcAcmState::new());
 
     // USB builder to construct the device with the specified configuration and classes
     let mut usb_builder = rp_usb_reset::build_usb_builder!(driver, config);
@@ -73,10 +71,9 @@ pub fn usb_task(
     // Initialize the CDC ACM classes for both the configuration and telemetry interfaces
     let cdc_conf = CDC_DEVICE.init(CdcAcmClass::new(&mut usb_builder, state_conf, 64));
     let cdc_tlm = TLM_DEVICE.init(CdcAcmClass::new(&mut usb_builder, state_tlm, 64));
+    let cdc_defmt = embassy_defmt_usb::UsbDefmtLogger::default().build(&mut usb_builder);
 
-    // Set up USB logging
-    let cdc_log = CdcAcmClass::new(&mut usb_builder, state_log, 64);
-    match cdc_log_task(cdc_log) {
+    match cdc_defmt_task(cdc_defmt) {
         Ok(t) => {
             spawner.spawn(t);
             trace!("CDC log task initialized")
@@ -124,6 +121,11 @@ pub fn usb_task(
 }
 
 #[embassy_executor::task]
+pub async fn cdc_defmt_task(cdc: embassy_defmt_usb::UsbDefmtTask<UsbDriver<'static, USB>>) {
+    cdc.run().await;
+}
+
+#[embassy_executor::task]
 pub async fn cdc_conf_task(
     usb: &'static mut CdcAcmDevice,
     sender: CommandSender,
@@ -163,7 +165,7 @@ pub async fn cdc_conf_task(
                             \t- enable-outputs: Enable the DAC outputs\r\n\
                             \t- disable-outputs: Disable the DAC outputs\r\n\
                             \t- all-off: Disable outputs and set all DAC channels to 0\r\n\
-                            \t- help: relm-async-componenthow this help message\r\n\
+                            \t- help: Show this help message\r\n\
                             Note: \r\n\
                             \t<dac> can be dac0, dac1, or dac2 (dac2 is not implemented)\r\n\
                             \t<channel> can be a, b, c, d, e, f, g, h, and all\r\n\
@@ -233,11 +235,6 @@ pub async fn cdc_tlm_task(usb: &'static mut CdcAcmDevice, receiver: MeasurementR
 pub async fn usb_device_task(dev: UsbDeviceDriver) {
     let mut dev = dev;
     dev.run().await;
-}
-
-#[embassy_executor::task]
-pub async fn cdc_log_task(cdc: CdcAcmDevice) {
-    embassy_usb_logger::with_class!(1024, log::LevelFilter::Info, cdc).await;
 }
 
 trait AcmDeviceFunctions {

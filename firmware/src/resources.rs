@@ -14,16 +14,16 @@ assign_resources! {
     }
     dac: DacDev {
         i2c: I2C0,
-        scl: PIN_9,
-        sda: PIN_8,
+        scl: PIN_21,
+        sda: PIN_20,
         en: PIN_17,
         // ldac: PIN_18,
         // clr: PIN_19,
     }
     i2csns: I2cSnsDev {
         i2c: I2C1,
-        scl: PIN_7,
-        sda: PIN_6,
+        scl: PIN_3,
+        sda: PIN_2,
     }
     led: LedDev {
         pin: PIN_25,

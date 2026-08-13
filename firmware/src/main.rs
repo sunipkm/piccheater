@@ -16,7 +16,7 @@ use heapless::String;
 use static_cell::StaticCell;
 
 use panic_probe as _;
-use defmt_rtt as _;
+// use defmt_rtt as _;
 
 mod commands;
 mod dac;
